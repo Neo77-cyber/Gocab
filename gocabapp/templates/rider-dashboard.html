@@ -1,0 +1,1810 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Dashboard - Modern Admin Panel</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="" rel="icon">
+  <link href="" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary-color: #08915e;
+      --primary-light: #e6f7f0;
+      --sidebar-width: 280px;
+      --transition: all 0.3s ease;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f8fafc;
+      color: #333;
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar Styles */
+    #sidebar {
+      width: var(--sidebar-width);
+      background: white;
+      height: 100vh;
+      position: fixed;
+      top: 0;
+      left: 0;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+      transition: var(--transition);
+      z-index: 1000;
+      padding: 1.5rem;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid #eee;
+    }
+
+    .sidebar-logo {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+    }
+
+    .sidebar-logo i {
+      margin-right: 0.75rem;
+      font-size: 1.75rem;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+    }
+
+    .menu-title {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: #64748b;
+      margin: 1.5rem 0 0.75rem;
+      font-weight: 600;
+    }
+
+    .menu-item {
+      margin-bottom: 0.5rem;
+      position: relative;
+    }
+
+    .menu-link {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      color: #64748b;
+      text-decoration: none;
+      font-weight: 500;
+      transition: var(--transition);
+    }
+
+    .menu-link:hover {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+    }
+
+    .menu-link.active {
+      background-color: var(--primary-light);
+      color: var(--primary-color);
+      font-weight: 600;
+    }
+
+    .menu-link i {
+      margin-right: 0.75rem;
+      font-size: 1.1rem;
+      width: 24px;
+      text-align: center;
+    }
+
+    .menu-badge {
+      margin-left: auto;
+      background-color: var(--primary-color);
+      color: white;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 10px;
+    }
+
+    /* Checkbox style */
+    .menu-checkbox {
+      position: relative;
+      padding-left: 2.5rem;
+      cursor: pointer;
+    }
+
+    .menu-checkbox input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+      height: 0;
+      width: 0;
+    }
+
+    .checkmark {
+      position: absolute;
+      top: 50%;
+      left: 1rem;
+      transform: translateY(-50%);
+      height: 20px;
+      width: 20px;
+      background-color: white;
+      border: 2px solid #ddd;
+      border-radius: 4px;
+      transition: var(--transition);
+    }
+
+    .menu-checkbox:hover .checkmark {
+      border-color: var(--primary-color);
+    }
+
+    .menu-checkbox input:checked ~ .checkmark {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+    }
+
+    .checkmark:after {
+      content: "";
+      position: absolute;
+      display: none;
+      left: 6px;
+      top: 2px;
+      width: 5px;
+      height: 10px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+
+    .menu-checkbox input:checked ~ .checkmark:after {
+      display: block;
+    }
+
+    /* Main Content */
+    main {
+      margin-left: var(--sidebar-width);
+      flex-grow: 1;
+      padding: 2rem;
+      transition: var(--transition);
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .page-title {
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+
+    .card {
+      background: white;
+      border-radius: 0.75rem;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 992px) {
+      #sidebar {
+        transform: translateX(-100%);
+      }
+      
+      #sidebar.active {
+        transform: translateX(0);
+      }
+      
+      main {
+        margin-left: 0;
+      }
+    }
+    .location-form {
+        max-width: 400px;
+        margin: 20px auto;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      }
+    
+      .location-input {
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        padding: 20px;
+        background: white;
+      }
+    
+      .form-group {
+        margin-bottom: 20px;
+      }
+    
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+      }
+    
+      .location-field {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 16px;
+        transition: border-color 0.3s;
+      }
+    
+      .location-field:focus {
+        outline: none;
+        border-color: #08915e;
+        box-shadow: 0 0 0 2px rgba(8, 145, 94, 0.1);
+      }
+    
+      .location-field[readonly] {
+        background-color: #f8f8f8;
+        color: #666;
+        cursor: not-allowed;
+      }
+    
+      .submit-btn {
+        width: 100%;
+        padding: 14px;
+        background-color: #08915e;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+    
+      .submit-btn:hover {
+        background-color: #067a4e;
+      }
+    
+      .submit-btn i {
+        font-size: 14px;
+      }
+    /* Base Styles */
+  :root {
+    --primary-color: #08915e;
+    --text-color: #333;
+    --light-gray: #f5f5f5;
+    --border-color: #e0e0e0;
+  }
+  
+  .card {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    overflow: hidden;
+    margin: 20px 0;
+  }
+  
+  .ride-history-section {
+    width: 100%;
+    padding: 20px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  
+  .section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 20px;
+  }
+  
+  /* Filter Buttons */
+  .history-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 5px;
+  }
+  
+  .filter-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+  
+  .filter-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+  }
+  
+  .filter-btn:hover {
+    background: var(--light-gray);
+  }
+  
+  /* Ride Cards */
+  .ride-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .ride-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .ride-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  
+  .ride-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+  }
+  
+  .ride-date {
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .ride-price {
+    font-weight: 600;
+    color: var(--primary-color);
+  }
+  
+  /* Route Visualization */
+  .ride-route {
+    position: relative;
+    padding: 0 10px 15px 25px;
+    margin-bottom: 15px;
+  }
+  
+  .location-pin {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 5px;
+  }
+  
+  .location-pin i {
+    font-size: 0.8rem;
+  }
+  
+  .location-pin.start i {
+    color: var(--primary-color);
+  }
+  
+  .location-pin.end i {
+    color: #ff4757;
+  }
+  
+  .location-text {
+    font-size: 0.95rem;
+  }
+  
+  .route-line {
+    position: absolute;
+    left: 30px;
+    top: 15px;
+    bottom: 15px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--primary-color), #ff4757);
+  }
+  
+  /* Driver Info */
+  .ride-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+  }
+  
+  .driver-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .driver-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--primary-color);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 500;
+  }
+  
+  .driver-name {
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+  
+  .car-info {
+    font-size: 0.8rem;
+    color: #666;
+  }
+  
+  /* Buttons */
+  .action-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: white;
+    color: var(--text-color);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .action-btn:hover {
+    background: var(--light-gray);
+  }
+  
+  .view-all-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-top: 20px;
+    background: white;
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  
+  .view-all-btn:hover {
+    background: var(--primary-color);
+    color: white;
+  }
+  /* Card Container */
+  .card {
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    overflow: hidden;
+    margin: 20px 0;
+  }
+
+  /* Profile Section - Now Full Width */
+  .profile-section {
+    width: 100%;
+    padding: 24px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Profile Header */
+  .profile-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 24px;
+    position: relative;
+    padding-right: 40px; /* Space for edit button */
+  }
+
+  .profile-avatar {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #08915e, #06d6a0);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    font-weight: bold;
+    margin-right: 16px;
+    flex-shrink: 0;
+  }
+
+  .profile-info {
+    flex: 1;
+    min-width: 0; /* Allows text truncation */
+  }
+
+  .profile-name {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 4px 0;
+    color: #333;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .profile-rating {
+    display: flex;
+    align-items: center;
+    color: #666;
+    font-size: 14px;
+    flex-wrap: wrap;
+  }
+
+  .profile-rating i {
+    color: #FFC107;
+    margin-right: 4px;
+    font-size: 16px;
+  }
+
+  .profile-rating span {
+    margin-right: 8px;
+  }
+
+  .rating-count {
+    color: #999;
+  }
+
+  .edit-profile-btn {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: #f5f5f5;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .edit-profile-btn:hover {
+    background: #e0e0e0;
+  }
+
+  /* Profile Stats - Now responsive columns */
+  .profile-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+    padding: 16px 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+  }
+
+  .stat-item {
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 24px;
+    font-weight: 600;
+    color: #08915e;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 14px;
+    color: #666;
+  }
+
+  /* Profile Details */
+  .profile-details {
+    margin-bottom: 24px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+
+  .detail-item {
+    display: flex;
+    align-items: center;
+    font-size: 15px;
+    min-width: 0; /* Allows text truncation */
+  }
+
+  .detail-item i {
+    width: 24px;
+    color: #08915e;
+    margin-right: 12px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .detail-item span {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Profile Actions - Responsive buttons */
+  .profile-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+  }
+
+  .action-btn {
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .action-btn.primary {
+    background: #08915e;
+    color: white;
+  }
+
+  .action-btn.primary:hover {
+    background: #067a4e;
+  }
+
+  .action-btn.secondary {
+    background: #f5f5f5;
+    color: #333;
+  }
+
+  .action-btn.secondary:hover {
+    background: #e0e0e0;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 600px) {
+    .profile-header {
+      flex-direction: column;
+      text-align: center;
+      padding-right: 0;
+    }
+    
+    .profile-avatar {
+      margin-right: 0;
+      margin-bottom: 16px;
+    }
+    
+    .edit-profile-btn {
+      position: relative;
+      margin-top: 16px;
+    }
+    
+    .profile-details {
+      grid-template-columns: 1fr;
+    }
+  }
+  /* Fare Estimate Container */
+  .fare-estimate {
+    background-color: #f8fafc;
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    border: 1px solid #e2e8f0;
+    transition: all 0.3s ease;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Fare Breakdown */
+  .fare-breakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .fare-breakdown h4 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  #fareAmount {
+    color: #08915e;
+    font-weight: 700;
+    font-size: 1.4rem;
+  }
+
+  .fare-breakdown p {
+    margin: 0;
+    font-size: 0.95rem;
+    color: #64748b;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .fare-breakdown p small {
+    display: flex;
+    gap: 15px;
+  }
+
+  /* Distance and Time Spans */
+  #distanceText, 
+  #durationText {
+    color: #334155;
+    font-weight: 500;
+  }
+
+  /* Surge Pricing Notice */
+  #surgeNotice {
+    background-color: #fff4e6;
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0.4); }
+    70% { box-shadow: 0 0 0 6px rgba(255, 165, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 165, 0, 0); }
+  }
+
+  #surgeNotice i {
+    color: #ff9500;
+  }
+
+  #surgeMultiplier {
+    font-weight: 700;
+    color: #e67e22;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 480px) {
+    .fare-breakdown h4 {
+      font-size: 1.1rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 5px;
+    }
+    
+    .fare-breakdown p small {
+      flex-direction: column;
+      gap: 5px;
+    }
+  }
+  /* Ride Tracking Card Styling */
+.tracking-card {
+  max-width: 500px;
+  margin: 20px auto;
+  padding: 25px;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+.tracking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.tracking-header h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #333;
+  font-weight: 600;
+}
+
+.tracking-code {
+  background: #f8f8f8;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.tracking-code span {
+  color: #0066ff;
+}
+
+.tracking-animation {
+  position: relative;
+  height: 100px;
+  margin: 30px 0;
+}
+
+.car-container {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 100%;
+  z-index: 2;
+}
+
+.fa-car-side {
+  font-size: 2.5rem;
+  color: #0066ff;
+  position: absolute;
+  left: 0;
+  animation: drive 3s linear infinite;
+}
+
+.road {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+}
+
+.road .line {
+  position: absolute;
+  width: 40px;
+  height: 2px;
+  background: #fff;
+  animation: roadLines 1s linear infinite;
+}
+
+.road .line:nth-child(1) {
+  left: 20%;
+}
+.road .line:nth-child(2) {
+  left: 50%;
+}
+.road .line:nth-child(3) {
+  left: 80%;
+}
+
+.pulse-effect {
+  position: absolute;
+  width: 100px;
+  height: 100px;
+  background: rgba(0, 102, 255, 0.1);
+  border-radius: 50%;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  animation: pulse 2s infinite;
+  z-index: 1;
+}
+
+.tracking-details {
+  margin: 30px 0;
+}
+
+.detail-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  font-size: 1rem;
+  color: #555;
+}
+
+.detail-item i {
+  margin-right: 12px;
+  font-size: 1.2rem;
+  color: #0066ff;
+  width: 24px;
+  text-align: center;
+}
+
+.detail-item span span {
+  font-weight: 600;
+  color: #333;
+}
+
+.tracking-map {
+  height: 150px;
+  background: #f5f5f5;
+  border-radius: 8px;
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #999;
+  border: 1px dashed #ddd;
+}
+
+.cancel-btn {
+  width: 100%;
+  padding: 12px;
+  background: #fff;
+  color: #ff4444;
+  border: 1px solid #ffdddd;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cancel-btn i {
+  margin-right: 8px;
+}
+
+.cancel-btn:hover {
+  background: #ffeeee;
+}
+
+/* Animations */
+@keyframes drive {
+  0% { left: 0; transform: translateY(-50%) scaleX(1); }
+  49% { transform: translateY(-50%) scaleX(1); }
+  50% { left: 100%; transform: translateY(-50%) scaleX(-1); }
+  99% { transform: translateY(-50%) scaleX(-1); }
+  100% { left: 0; transform: translateY(-50%) scaleX(1); }
+}
+
+@keyframes roadLines {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100px); }
+}
+
+@keyframes pulse {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.7; }
+  70% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
+  100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .tracking-card {
+    padding: 20px;
+    margin: 10px;
+  }
+  
+  .tracking-header h3 {
+    font-size: 1.2rem;
+  }
+  
+  .tracking-animation {
+    margin: 20px 0;
+  }
+}
+  </style>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <a href="#" class="sidebar-logo">
+        <i class="fas fa-car"></i>  
+        <span>GoCab</span>
+      </a>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li class="menu-title">MAIN</li>
+      
+      <li class="menu-item">
+        <a href="{% url 'rider_dashboard' %}" class="menu-link">
+          <i class="fas fa-home"></i>
+          <span>Overview</span>
+        </a>
+      </li>
+      
+      <li class="menu-item">
+        <a href="#" class="menu-link active">
+            <i class="fas fa-bell"></i>  
+          <span>Notification</span>
+          <span class="menu-badge">12</span>
+        </a>
+      </li>
+
+      <li class="menu-title">SETTINGS</li>
+      
+      
+      
+      <li class="menu-item">
+        <a href="{% url 'logout' %}" class="menu-link">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </a>
+      </li>
+      
+     
+
+      
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <div class="page-header">
+      
+    </div>
+
+    <div class="card">
+      <form id="rideForm" class="location-form">
+        {% csrf_token %}
+        <div class="location-input">
+          <div class="form-group">
+            <label for="current-location">Current Location</label>
+            <input 
+              type="text" 
+              id="current-location" 
+              name="current_location" 
+              placeholder="Enter your location" 
+              class="location-field"
+              required
+            >
+          </div>
+          
+          <div class="form-group">
+            <label for="destination">Where to?</label>
+            <input 
+              type="text" 
+              id="destination" 
+              name="destination" 
+              placeholder="Enter your destination" 
+              class="location-field"
+              required
+            >
+          </div>
+          
+          <!-- Fare Estimate Display -->
+          <div id="fareEstimate" class="fare-estimate" style="display:none;">
+            <div class="fare-breakdown">
+              <h4>Estimated Fare: <span id="fareAmount">₦--.--</span></h4>
+              <p><small>Distance: <span id="distanceText">-- km</span> • Time: <span id="durationText">-- mins</span></small></p>
+              <p id="surgeNotice" style="color: orange; display:none;">
+                <i class="fas fa-bolt"></i> Surge pricing in effect (x<span id="surgeMultiplier">1.5</span>)
+              </p>
+            </div>
+          </div>
+          
+          <button type="submit" class="submit-btn">
+            <i class="fas fa-paper-plane"></i> Book a Ride
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Ride Tracking Card (Initially Hidden) -->
+<div id="rideTrackingCard" class="card tracking-card" style="display:none;">
+  <div class="tracking-header">
+    <h3>Finding you a driver</h3>
+    <div class="tracking-code">Code: <span id="trackingCode">--</span></div>
+  </div>
+  
+  <div class="tracking-animation">
+    <div class="car-container">
+      <i class="fas fa-car-side"></i>
+      <div class="road">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+      </div>
+    </div>
+    <div class="pulse-effect"></div>
+  </div>
+  
+  <div class="tracking-details">
+    <div class="detail-item">
+      <i class="fas fa-clock"></i>
+      <span>Estimated arrival: <span id="estimatedArrival">--</span></span>
+    </div>
+    <div class="detail-item">
+      <i class="fas fa-map-marker-alt"></i>
+      <span>Driver is <span id="driverDistance">--</span> away</span>
+    </div>
+  </div>
+  
+  <div class="tracking-map" id="trackingMap"></div>
+  
+  <button id="cancelRideBtn" class="cancel-btn">
+    <i class="fas fa-times"></i> Cancel Ride
+  </button>
+</div>
+    
+   
+    <div class="card">
+        <div class="ride-history-section">
+          <h2 class="section-title">Your Ride History</h2>
+          
+          <div class="history-filters">
+            <button class="filter-btn active">All</button>
+            <button class="filter-btn">This Week</button>
+            <button class="filter-btn">This Month</button>
+            <button class="filter-btn">Past Year</button>
+          </div>
+          
+          <div class="ride-cards">
+            <!-- Ride Card 1 -->
+            <div class="ride-card">
+              <div class="ride-header">
+                <div class="ride-date">Today, 10:45 AM</div>
+                <div class="ride-price">$12.50</div>
+              </div>
+              
+              <div class="ride-route">
+                <div class="location-pin start">
+                  <i class="fas fa-circle"></i>
+                  <div class="location-text">8 Areago St</div>
+                </div>
+                <div class="route-line"></div>
+                <div class="location-pin end">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <div class="location-text">Downtown Shopping Mall</div>
+                </div>
+              </div>
+              
+              <div class="ride-footer">
+                <div class="driver-info">
+                  <div class="driver-avatar">JD</div>
+                  <div class="driver-details">
+                    <div class="driver-name">John Doe</div>
+                    <div class="car-info">Toyota Camry • ABC-1234</div>
+                  </div>
+                </div>
+                <button class="action-btn">Details</button>
+              </div>
+            </div>
+            
+            <!-- Ride Card 2 -->
+            <div class="ride-card">
+              <div class="ride-header">
+                <div class="ride-date">Yesterday, 4:30 PM</div>
+                <div class="ride-price">$18.75</div>
+              </div>
+              
+              <div class="ride-route">
+                <div class="location-pin start">
+                  <i class="fas fa-circle"></i>
+                  <div class="location-text">Central Station</div>
+                </div>
+                <div class="route-line"></div>
+                <div class="location-pin end">
+                  <i class="fas fa-map-marker-alt"></i>
+                  <div class="location-text">8 Areago St</div>
+                </div>
+              </div>
+              
+              <div class="ride-footer">
+                <div class="driver-info">
+                  <div class="driver-avatar">SM</div>
+                  <div class="driver-details">
+                    <div class="driver-name">Sarah Miller</div>
+                    <div class="car-info">Honda Accord • XYZ-5678</div>
+                  </div>
+                </div>
+                <button class="action-btn">Details</button>
+              </div>
+            </div>
+          </div>
+          
+          <button class="view-all-btn">View All Ride History</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="profile-section">
+            <div class="profile-header">
+              <div class="profile-avatar">JD</div>
+              <div class="profile-info">
+                <h2 class="profile-name">John Doe</h2>
+                <div class="profile-rating">
+                  <i class="fas fa-star"></i>
+                  <span>4.9</span>
+                  <span class="rating-count">(128 rides)</span>
+                </div>
+              </div>
+              <button class="edit-profile-btn">
+                <i class="fas fa-pencil-alt"></i>
+              </button>
+            </div>
+          
+            <div class="profile-stats">
+              <div class="stat-item">
+                <div class="stat-value">247</div>
+                <div class="stat-label">Total Rides</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">92%</div>
+                <div class="stat-label">Success Rate</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">2,850</div>
+                <div class="stat-label">Miles Traveled</div>
+              </div>
+            </div>
+          
+            <div class="profile-details">
+              <div class="detail-item">
+                <i class="fas fa-envelope"></i>
+                <span>john.doe@example.com</span>
+              </div>
+              <div class="detail-item">
+                <i class="fas fa-phone"></i>
+                <span>+1 (555) 123-4567</span>
+              </div>
+              <div class="detail-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <span>8 Areago St, Brooklyn, NY</span>
+              </div>
+              <div class="detail-item">
+                <i class="fas fa-calendar-alt"></i>
+                <span>Member since May 2023</span>
+              </div>
+            </div>
+          
+            <div class="profile-actions">
+              <button class="action-btn primary">
+                <i class="fas fa-car"></i>
+                <span>Ride Preferences</span>
+              </button>
+              <button class="action-btn secondary">
+                <i class="fas fa-shield-alt"></i>
+                <span>Safety Center</span>
+              </button>
+            </div>
+          </div>
+
+      </div>
+
+      
+   
+  </main>
+
+  <script>
+    const GOOGLE_MAPS_API_KEY = 'AIzaSyAUMHV6_Zn7ThpeGbl8qC6gMmfvxKU7IgI';
+let rideStatusInterval = null;
+let currentRideId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Google Maps
+    if (!window.google) {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initAutocomplete`;
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+    } else {
+        initAutocomplete();
+    }
+
+    // Form submission handler
+    const rideForm = document.getElementById('rideForm');
+    if (rideForm) {
+        rideForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Prevent default form submission
+            
+            const currentLocation = document.getElementById('current-location').value;
+            const destination = document.getElementById('destination').value;
+            
+            if (!currentLocation || !destination) {
+                alert('Please enter both locations');
+                return;
+            }
+
+            if (document.getElementById('fareEstimate').style.display === 'block') {
+                bookRide(currentLocation, destination);
+            } else {
+                calculateFare();
+            }
+        });
+    }
+
+    // Cancel button handler
+    const cancelBtn = document.getElementById('cancelRideBtn');
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', cancelRide);
+    }
+});
+
+function initAutocomplete() {
+    const currentLocationField = document.getElementById('current-location');
+    const destinationField = document.getElementById('destination');
+    
+    if (!currentLocationField || !destinationField) return;
+
+    const options = {
+        types: ['geocode'],
+        fields: ['formatted_address', 'geometry'],
+        componentRestrictions: {country: 'ng'}
+    };
+
+    new google.maps.places.Autocomplete(currentLocationField, options);
+    new google.maps.places.Autocomplete(destinationField, options);
+
+    // Add input listeners for fare calculation
+    currentLocationField.addEventListener('input', debounce(calculateFare, 500));
+    destinationField.addEventListener('input', debounce(calculateFare, 500));
+}
+
+// Main fare calculation function
+async function calculateFare() {
+  const pickupInput = document.getElementById('current-location');
+  const destinationInput = document.getElementById('destination');
+  
+  // Validate inputs and elements exist
+  if (!pickupInput || !destinationInput) {
+      console.error('Location input fields not found');
+      return;
+  }
+
+  const pickup = pickupInput.value;
+  const destination = destinationInput.value;
+  
+  // Validate input values
+  if (!pickup?.trim() || !destination?.trim()) {
+      hideFareEstimate();
+      return;
+  }
+
+  // UI Loading state
+  const submitBtn = document.querySelector('.submit-btn');
+  setLoadingState(submitBtn, true);
+
+  try {
+      const response = await fetchFareEstimate(pickup, destination);
+      const data = await processFareResponse(response);
+      updateFareDisplay(data);
+  } catch (error) {
+      handleFareError(error);
+  } finally {
+      setLoadingState(submitBtn, false);
+  }
+}
+
+// Helper Functions
+async function fetchFareEstimate(pickup, destination) {
+  const csrfToken = getCookie('csrftoken');
+  if (!csrfToken) {
+      console.warn('CSRF token not found');
+      throw new FareError('Security token missing', 403);
+  }
+
+  const response = await fetch('/api/estimate-fare/', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrfToken,
+          'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+          pickup: pickup.trim(),
+          destination: destination.trim(),
+          vehicle_type: 'standard',
+          timestamp: Date.now()  // Prevent caching
+      })
+  });
+  
+  if (!response.ok) {
+      let errorData;
+      try {
+          errorData = await response.json();
+      } catch (e) {
+          throw new FareError('Invalid server response', response.status);
+      }
+      throw new FareError(
+          errorData.message || 'Failed to calculate fare', 
+          response.status
+      );
+  }
+  return response;
+}
+
+async function processFareResponse(response) {
+  let data;
+  try {
+      data = await response.json();
+  } catch (e) {
+      throw new FareError('Invalid fare data format', 500);
+  }
+  
+  // Validate response structure
+  if (!data || typeof data.total_fare === 'undefined') {
+      throw new FareError('Invalid fare data received', 500);
+  }
+  
+  return {
+      total_fare: parseFloat(data.total_fare) || 0,
+      distance_km: parseFloat(data.distance_km) || 0,
+      duration_min: parseFloat(data.duration_min) || 0,
+      surge_multiplier: parseFloat(data.surge_multiplier) || 1.0
+  };
+}
+
+function updateFareDisplay(data) {
+  const fareEstimate = document.getElementById('fareEstimate');
+  if (!fareEstimate) {
+      console.warn('Fare estimate element not found');
+      return;
+  }
+
+  // Format currency
+  const formatter = new Intl.NumberFormat('en-NG', {
+      style: 'currency',
+      currency: 'NGN',
+      minimumFractionDigits: 2
+  });
+
+  // Safely update display elements
+  const fareAmountEl = document.getElementById('fareAmount');
+  const distanceTextEl = document.getElementById('distanceText');
+  const durationTextEl = document.getElementById('durationText');
+  const surgeMultiplierEl = document.getElementById('surgeMultiplier');
+  const surgeNoticeEl = document.getElementById('surgeNotice');
+
+  if (fareAmountEl) fareAmountEl.textContent = formatter.format(data.total_fare);
+  if (distanceTextEl) distanceTextEl.textContent = `${data.distance_km.toFixed(1)} km`;
+  if (durationTextEl) durationTextEl.textContent = `${Math.round(data.duration_min)} mins`;
+
+  // Handle surge pricing
+  if (surgeNoticeEl) {
+      if (data.surge_multiplier > 1) {
+          if (surgeMultiplierEl) surgeMultiplierEl.textContent = data.surge_multiplier.toFixed(1);
+          surgeNoticeEl.style.display = 'block';
+      } else {
+          surgeNoticeEl.style.display = 'none';
+      }
+  }
+
+  // Show fare estimate
+  fareEstimate.style.display = 'block';
+}
+
+function handleFareError(error) {
+  console.error('Fare Error:', error);
+  
+  let errorMessage = 'Error calculating fare. Please try again.';
+  if (error instanceof FareError) {
+      errorMessage = error.message;
+      
+      // Specific handling for different status codes
+      if (error.status === 400) {
+          errorMessage = 'Please check your locations and try again.';
+      } else if (error.status === 429) {
+          errorMessage = 'Too many requests. Please wait a moment.';
+      } else if (error.status === 403) {
+          errorMessage = 'Session expired. Please refresh the page.';
+      }
+  }
+  
+  showErrorToast(errorMessage);
+  hideFareEstimate();
+}
+
+function hideFareEstimate() {
+  const fareEstimate = document.getElementById('fareEstimate');
+  if (fareEstimate) {
+      fareEstimate.style.display = 'none';
+  }
+}
+
+function setLoadingState(button, isLoading) {
+  if (!button) return;
+  
+  button.disabled = isLoading;
+  button.innerHTML = isLoading 
+      ? '<i class="fas fa-spinner fa-spin"></i> Calculating...'
+      : '<i class="fas fa-paper-plane"></i> Book a Ride';
+}
+
+// Error Toast Display
+function showErrorToast(message) {
+  // Remove existing toasts
+  document.querySelectorAll('.error-toast').forEach(el => el.remove());
+  
+  const toast = document.createElement('div');
+  toast.className = 'error-toast';
+  toast.innerHTML = `
+      <i class="fas fa-exclamation-circle"></i>
+      <span>${message}</span>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Auto-remove after delay
+  setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => toast.remove(), 300);
+  }, 5000);
+}
+
+// Custom Error Class
+class FareError extends Error {
+  constructor(message, status) {
+      super(message);
+      this.name = 'FareError';
+      this.status = status;
+  }
+}
+
+async function bookRide(currentLocation, destination) {
+  const submitBtn = document.querySelector('.submit-btn');
+  if (!submitBtn) return;
+
+  // Set loading state
+  submitBtn.disabled = true;
+  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
+
+  try {
+      const response = await fetch('/request_ride/', {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/x-www-form-urlencoded',
+              'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: new URLSearchParams({
+              'current_location': currentLocation,
+              'destination': destination
+          })
+      });
+
+      if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || 'Failed to book ride');
+      }
+
+      const data = await response.json();
+      if (!data.ride_id) throw new Error('Missing ride ID');
+      
+      startRideTracking(data.ride_id);
+  } catch (error) {
+      console.error('Booking error:', error);
+      showErrorToast(`Error: ${error.message}`);
+  } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Book a Ride';
+  }
+}
+
+function startRideTracking(rideId) {
+  currentRideId = rideId;
+  
+  // Safely get DOM elements
+  const rideForm = document.getElementById('rideForm');
+  const trackingCard = document.getElementById('rideTrackingCard');
+  const trackingCodeElement = document.getElementById('trackingCode');
+  const searchingState = document.getElementById('searchingState');
+  const assignedState = document.getElementById('driverAssignedState');
+
+  // Hide form and show tracking card if elements exist
+  if (rideForm) rideForm.style.display = 'none';
+  if (trackingCard) trackingCard.style.display = 'block';
+  
+  // Generate and display tracking code
+  if (trackingCodeElement) {
+      const trackingCode = Math.random().toString(36).substring(2, 6).toUpperCase();
+      trackingCodeElement.textContent = trackingCode;
+  }
+  
+  // Show searching state
+  if (searchingState) searchingState.style.display = 'block';
+  if (assignedState) assignedState.style.display = 'none';
+  
+  // Start polling for ride status
+  checkRideStatus();
+  clearInterval(rideStatusInterval); // Clear any existing interval
+  rideStatusInterval = setInterval(checkRideStatus, 3000);
+}
+
+async function checkRideStatus() {
+  if (!currentRideId) return;
+
+  try {
+      const response = await fetch(`/ride-status/${currentRideId}/`);
+      if (!response.ok) throw new Error('Failed to check status');
+      
+      const data = await response.json();
+      updateRideStatusUI(data);
+      
+      // Stop polling if ride is completed/cancelled
+      if (['completed', 'cancelled'].includes(data.status)) {
+          clearInterval(rideStatusInterval);
+      }
+  } catch (error) {
+      console.error('Status check error:', error);
+      // Don't stop polling on error - retry next interval
+  }
+}
+
+function updateRideStatusUI(data) {
+  const status = data.status.toLowerCase();
+  const statusElement = document.getElementById('trackingStatus');
+  const searchingState = document.getElementById('searchingState');
+  const assignedState = document.getElementById('driverAssignedState');
+  const cancelButton = document.getElementById('cancelRideBtn');
+  
+  if (!statusElement || !searchingState || !assignedState || !cancelButton) return;
+
+  switch(data.status) {
+      case 'pending':
+          statusElement.textContent = "Finding you a driver";
+          searchingState.style.display = 'block';
+          assignedState.style.display = 'none';
+          cancelButton.style.display = 'block';
+          break;
+          
+      case 'accepted':
+            statusElement.textContent = "Driver is on the way!";
+            searchingState.style.display = 'none';
+            assignedState.style.display = 'block';
+            cancelButton.style.display = 'block';
+
+            
+            if (data.driver) {
+              updateDriverInfo(data.driver);
+          } else {
+              
+              document.getElementById('driverName').textContent = "Driver assigned";
+              document.getElementById('vehicleInfo').textContent = "Getting details...";
+          }
+
+          
+          const etaElement = document.getElementById('estimatedArrival');
+          const distanceElement = document.getElementById('driverDistance');
+          
+          if (data.eta) {
+              etaElement.textContent = `${data.eta} min`;
+          } else {
+              etaElement.textContent = "Calculating...";
+          }
+          
+          if (data.distance) {
+              distanceElement.textContent = `${data.distance} km`;
+          } else {
+              distanceElement.textContent = "--";
+          }
+          break;
+
+          
+      case 'started':
+          statusElement.textContent = "Trip in progress";
+          statusElement.style.color = "";
+          const estimatedArrival = document.getElementById('estimatedArrival');
+          if (estimatedArrival) estimatedArrival.textContent = "En route to destination";
+          break;
+          
+      case 'completed':
+          statusElement.textContent = "Trip completed!";
+          statusElement.style.color = "green";
+          if (cancelButton) cancelButton.style.display = 'none';
+          const fareElement = document.getElementById('estimatedArrival');
+          if (fareElement && data.fare) fareElement.textContent = `Fare: ₦${data.fare.toFixed(2)}`;
+          break;
+          
+      case 'cancelled':
+          statusElement.textContent = "Trip cancelled";
+          statusElement.style.color = "red";
+          if (cancelButton) cancelButton.style.display = 'none';
+          break;
+  }
+}
+
+async function cancelRide() {
+  if (!currentRideId || !confirm('Are you sure you want to cancel this ride?')) return;
+  
+  const cancelButton = document.getElementById('cancelRideBtn');
+  if (cancelButton) cancelButton.disabled = true;
+  
+  try {
+      const response = await fetch(`/cancel-ride/${currentRideId}/`, {
+          method: 'POST',
+          headers: {
+              'X-CSRFToken': getCookie('csrftoken')
+          }
+      });
+      
+      if (response.ok) {
+          clearInterval(rideStatusInterval);
+          updateRideStatusUI({ status: 'cancelled' });
+      } else {
+          throw new Error('Failed to cancel ride');
+      }
+  } catch (error) {
+      console.error('Cancel error:', error);
+      showErrorToast('Failed to cancel ride. Please try again.');
+  } finally {
+      const cancelButton = document.getElementById('cancelRideBtn');
+      if (cancelButton) cancelButton.disabled = false;
+  }
+}
+
+
+function showErrorToast(message) {
+  // Remove existing toasts
+  const existingToasts = document.querySelectorAll('.error-toast');
+  existingToasts.forEach(toast => toast.remove());
+  
+  // Create new toast
+  const toast = document.createElement('div');
+  toast.className = 'error-toast';
+  toast.innerHTML = `
+      <i class="fas fa-exclamation-circle"></i>
+      <span>${message}</span>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Auto-remove after delay
+  setTimeout(() => {
+      toast.classList.add('fade-out');
+      setTimeout(() => toast.remove(), 300);
+  }, 5000);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+  </script>
+</body>
+</html>

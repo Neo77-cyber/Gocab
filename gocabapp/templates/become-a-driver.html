@@ -1,0 +1,427 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>GoCab</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
+
+  <!-- =======================================================
+  * Template Name: NiceSchool
+  * Template URL: https://bootstrapmade.com/nice-school-bootstrap-education-template/
+  * Updated: May 10 2025 with Bootstrap v5.3.6
+  * Author: BootstrapMade.com
+  * License: https://bootstrapmade.com/license/
+  ======================================================== -->
+</head>
+
+<body class="academics-page">
+
+    <header id="header" class="header d-flex align-items-center fixed-top">
+        <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+    
+          <a href="{% url 'home' %}" class="logo d-flex align-items-center">
+            <!-- Uncomment the line below if you also wish to use an image logo -->
+            <!-- <img src="{% static 'assets/img/logo.webp' %}" alt=""> -->
+            <i class="bi bi-car-front"></i>
+            <h1 class="sitename">GoCab</h1>
+          </a>
+    
+          <nav id="navmenu" class="navmenu">
+            <ul>
+              <li><a href="{% url 'signin' %}" class="active">DRIVER</a></li>
+              <li><a href="{% url 'signin' %}">RIDER</a></li>
+              <li><a href="{% url 'signin' %}">LOG IN</a></li>
+              <li class="dropdown"><a href="#"><span>SIGN UP</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+                <ul>
+                  <li><a href="{% url 'getaride' %}">Sign up to drive</a></li>
+                  <li><a href="{% url 'becomeadriver' %}">Apply to drive</a></li>
+                </ul>
+              </li>
+    
+              
+              
+            </ul>
+            <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+          </nav>
+    
+        </div>
+      </header>
+
+  <main class="main">
+
+    <!-- Page Title -->
+    <div class="page-title dark-background" style="background-image: url(assets/img/education/showcase-1.webp);">
+      <div class="container position-relative">
+        <h1>Become A Driver</h1>
+        <nav class="breadcrumbs">
+          <ol>
+            <li><a href="{% url 'home' %}">Home</a></li>
+            <li class="current">Become a Driver</li>
+          </ol>
+        </nav>
+      </div>
+    </div><!-- End Page Title -->
+
+    <!-- Academics Section -->
+    <section id="academics" class="academics section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="signup-fullscreen">
+          <div class="signup-container">
+              <h2>Become a Driver</h2>
+      
+              {% if messages %}
+              <div class="messages" style="color: red;">
+                  {% for message in messages %}
+                  <p class="{{ message.tags }}">{{ message }}</p>
+                  {% endfor %}
+              </div>
+              {% endif %}
+      
+              <form class="signup-form" action="{% url 'becomeadriver' %}" method="POST" enctype="multipart/form-data">
+                  {% csrf_token %}
+      
+                  <div class="form-section">
+                      <h3>Personal Information</h3>
+                      <div class="form-grid">
+                          <div class="form-group">
+                              <label for="{{ form.username.id_for_label }}">Username</label>
+                              {{ form.username }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.full_name.id_for_label }}">Full Name</label>
+                              {{ form.full_name }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.email.id_for_label }}">Email Address</label>
+                              {{ form.email }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+                              {{ form.phone_number }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
+                              {{ form.date_of_birth }}
+                          </div>
+                      </div>
+                  </div>
+      
+                  <div class="form-section">
+                      <h3>Vehicle Information</h3>
+                      <div class="form-grid">
+                          <div class="form-group">
+                              <label for="{{ form.vehicle_type.id_for_label }}">Vehicle Type</label>
+                              {{ form.vehicle_type }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.vehicle_model.id_for_label }}">Vehicle Model</label>
+                              {{ form.vehicle_model }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.drivers_license.id_for_label }}">Driver's License</label>
+                              {{ form.drivers_license }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.vehicle_insurance.id_for_label }}">Vehicle Insurance</label>
+                              {{ form.vehicle_insurance }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.vehicle_registration.id_for_label }}">Vehicle Registration</label>
+                              {{ form.vehicle_registration }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.roadworthiness_certificate.id_for_label }}">Roadworthiness Certificate</label>
+                              {{ form.roadworthiness_certificate }}
+                          </div>
+                      </div>
+                  </div>
+      
+                  <div class="form-section">
+                      <h3>Identification</h3>
+                      <div class="form-grid">
+                          <div class="form-group">
+                              <label for="{{ form.national_identification_number.id_for_label }}">National Identification Number</label>
+                              {{ form.national_identification_number }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.passport_photo.id_for_label }}">Passport Photo</label>
+                              {{ form.passport_photo }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.proof_of_residency.id_for_label }}">Proof of Residency</label>
+                              {{ form.proof_of_residency }}
+                          </div>
+                      </div>
+                  </div>
+      
+                  <div class="form-section">
+                      <h3>Banking Information</h3>
+                      <div class="form-grid">
+                          <div class="form-group">
+                              <label for="{{ form.bank_name.id_for_label }}">Bank Name</label>
+                              {{ form.bank_name }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.account_number.id_for_label }}">Account Number</label>
+                              {{ form.account_number }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.account_holder_name.id_for_label }}">Account Holder's Name</label>
+                              {{ form.account_holder_name }}
+                          </div>
+                      </div>
+                  </div>
+      
+                  <div class="form-section">
+                      <h3>Login Information</h3>
+                      <div class="form-grid">
+                          <div class="form-group">
+                              <label for="{{ form.password.id_for_label }}">Password</label>
+                              {{ form.password }}
+                          </div>
+      
+                          <div class="form-group">
+                              <label for="{{ form.confirm_password.id_for_label }}">Confirm Password</label>
+                              {{ form.confirm_password }}
+                          </div>
+                      </div>
+                  </div>
+      
+                  <div class="terms-checkbox">
+                      <input type="checkbox" id="terms" name="terms" required>
+                      <label for="terms">I agree to the <a href="#">Terms and Conditions</a></label>
+                  </div>
+      
+                  <button type="submit" class="submit-btn">Submit Application</button>
+              </form>
+          </div>
+      </div>
+      
+      
+      <style>
+          .signup-fullscreen {
+              min-height: 100vh;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              background-color: #f5f7fa;
+              padding: 2rem;
+          }
+      
+          .signup-container {
+              background-color: #fff;
+              border-radius: 16px;
+              box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+              padding: 3rem;
+              width: 100%;
+              max-width: 900px;
+          }
+      
+          .signup-container h2 {
+              font-size: 2rem;
+              color: #333;
+              margin-bottom: 2rem;
+              text-align: center;
+              font-weight: 700;
+          }
+      
+          .form-section {
+              margin-bottom: 2rem;
+          }
+      
+          .form-section h3 {
+              font-size: 1.2rem;
+              color: #444;
+              margin-bottom: 1rem;
+              border-bottom: 1px solid #eee;
+              padding-bottom: 0.5rem;
+          }
+      
+          .form-grid {
+              display: grid;
+              grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+              gap: 1.5rem;
+          }
+      
+          .form-group {
+              display: flex;
+              flex-direction: column;
+          }
+      
+          .form-group label {
+              font-size: 0.9rem;
+              color: #555;
+              margin-bottom: 0.5rem;
+          }
+      
+          .signup-form input,
+          .signup-form select {
+              padding: 0.75rem 1rem;
+              border: 1px solid #ddd;
+              border-radius: 8px;
+              outline: none;
+              transition: all 0.3s;
+              font-size: 1rem;
+          }
+      
+          .signup-form input:focus,
+          .signup-form select:focus {
+              border-color: #08915e;
+              box-shadow: 0 0 0 2px rgba(8, 145, 94, 0.2);
+          }
+      
+          .terms-checkbox {
+              display: flex;
+              align-items: center;
+              gap: 0.5rem;
+              margin: 1rem 0;
+          }
+      
+          .submit-btn {
+              background-color: #08915e;
+              color: #fff;
+              border: none;
+              padding: 1rem;
+              font-size: 1rem;
+              cursor: pointer;
+              border-radius: 8px;
+              font-weight: 600;
+              transition: background-color 0.3s;
+              margin-top: 1rem;
+          }
+      
+          .submit-btn:hover {
+              background-color: #067a4e;
+          }
+      
+          @media (max-width: 768px) {
+              .signup-container {
+                  padding: 2rem 1.5rem;
+              }
+      
+              .form-grid {
+                  grid-template-columns: 1fr;
+              }
+          }
+      </style>
+      
+
+    </section><!-- /Academics Section -->
+
+  </main>
+
+  <footer id="footer" class="footer position-relative dark-background">
+
+    <div class="container footer-top">
+      <div class="row gy-4">
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a href="index.html" class="logo d-flex align-items-center">
+            <span class="sitename">GoCab</span>
+          </a>
+          <div class="footer-contact pt-3">
+            <p class="mt-3"><strong>Phone:</strong> <span>+234 906 132 3021</span></p>
+            <p><strong>Email:</strong> <span>support@gocab.com</span></p>
+          </div>
+          <div class="social-links d-flex mt-4">
+            <a href=""><i class="bi bi-twitter-x"></i></a>
+            <a href=""><i class="bi bi-facebook"></i></a>
+            <a href=""><i class="bi bi-instagram"></i></a>
+            <a href=""><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Our Services</h4>
+          <ul>
+            
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Get a Ride</a></li>
+            <li><a href="#">Become a Driver</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Useful Links</h4>
+          <ul>
+            <li><a href="#">Terms of service</a></li>
+            <li><a href="#">Privacy policy</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">GoCab</strong> <span>All Rights Reserved</span></p>
+    </div>
+
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
+  <script src="{% static 'assets/vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'assets/vendor/purecounter/purecounter_vanilla.js' %}"></script>
+  <script src="{% static 'assets/vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/swiper/swiper-bundle.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/glightbox/js/glightbox.min.js' %}"></script>
+
+  <!-- Main JS File -->
+  <script src="{% static 'assets/js/main.js' %}"></script>
+
+</body>
+
+</html>

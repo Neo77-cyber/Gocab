@@ -1,0 +1,507 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>GoCab</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="assets/img/favicon.png" rel="icon">
+  <link href="assets/img/apple-touch-icon.png" rel="apple-touch-icon">
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com" rel="preconnect">
+  <link href="https://fonts.gstatic.com" rel="preconnect" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+
+  <!-- Vendor CSS Files -->
+  <link href="{% static 'assets/vendor/bootstrap/css/bootstrap.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/bootstrap-icons/bootstrap-icons.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/aos/aos.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/swiper/swiper-bundle.min.css' %}" rel="stylesheet">
+  <link href="{% static 'assets/vendor/glightbox/css/glightbox.min.css' %}" rel="stylesheet">
+
+  <!-- Main CSS File -->
+  <link href="{% static 'assets/css/main.css' %}" rel="stylesheet">
+
+  <!-- =======================================================
+  * Template Name: NiceSchool
+  * Template URL: https://bootstrapmade.com/nice-school-bootstrap-education-template/
+  * Updated: May 10 2025 with Bootstrap v5.3.6
+  * Author: BootstrapMade.com
+  * License: https://bootstrapmade.com/license/
+  ======================================================== -->
+</head>
+
+<body class="index-page">
+
+  <header id="header" class="header d-flex align-items-center fixed-top">
+    <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
+
+      <a href="{% url 'home' %}" class="logo d-flex align-items-center">
+        <!-- Uncomment the line below if you also wish to use an image logo -->
+        <!-- <img src="{% static 'assets/img/logo.webp' %}" alt=""> -->
+        <i class="bi bi-car-front"></i>
+        <h1 class="sitename">GoCab</h1>
+      </a>
+
+      <nav id="navmenu" class="navmenu">
+        <ul>
+          <li><a href="{% url 'signin' %}" class="active">DRIVER</a></li>
+          <li><a href="{% url 'signin' %}">RIDER</a></li>
+          <li><a href="{% url 'signin' %}">LOG IN</a></li>
+          <li class="dropdown"><a href="#"><span>SIGN UP</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
+            <ul>
+              <li><a href="{% url 'getaride' %}">Sign up to drive</a></li>
+              <li><a href="{% url 'becomeadriver' %}">Apply to drive</a></li>
+            </ul>
+          </li>
+
+          
+          
+        </ul>
+        <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
+      </nav>
+
+    </div>
+  </header>
+
+  <main class="main">
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero section dark-background">
+
+      <div class="hero-container">
+        <video autoplay="" muted="" loop="" playsinline="" class="video-background">
+          <source src="{% static 'assets/img/education/3006972-hd_1920_1080_24fps.mp4' %}" type="video/mp4">
+        </video>
+        <div class="overlay"></div>
+        <div class="container">
+          <div class="row align-items-center">
+            <div class="col-lg-7" data-aos="zoom-out" data-aos-delay="100">
+              <div class="hero-content">
+                <h1>Let's ride</h1>
+                <p>Wherever you're going, we've got you covered—on-demand, pre-booked, late night, or your daily ride. And, get rewarded for every ride.</p>
+                <div class="cta-buttons">
+                  <a href="{% url 'signin' %}" class="btn-primary">Get a Ride</a>
+                  <a href="{% url 'getaride' %}" class="btn-secondary">Sign Up to ride</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-5" data-aos="zoom-out" data-aos-delay="200">
+              <div class="stats-card">
+                <div class="stats-header">
+                  <h3>Why Choose Us</h3>
+                  <div class="decoration-line"></div>
+                </div>
+                <div class="stats-grid">
+                  <div class="stat-item">
+                    <div class="stat-icon">
+                      <i class="bi bi-speedometer2"></i>
+                    </div>
+                    <div class="stat-content">
+                      <h4>100+</h4>
+                      <p>Rides Completed</p>
+                    </div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-icon">
+                      <i class="bi bi-person-badge"></i>
+                    </div>
+                    <div class="stat-content">
+                      <h4>200+</h4>
+                      <p>Drivers Registered</p>
+                    </div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-icon">
+                     <i class="bi bi-geo-alt"></i>
+                    </div>
+                    <div class="stat-content">
+                      <h4>20+</h4>
+                      <p>Cities Covered</p>
+                    </div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-icon">
+                      <i class="bi bi-emoji-smile"></i>
+                    </div>
+                    <div class="stat-content">
+                      <h4>95%+</h4>
+                      <p>Customer Satisfaction</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      
+
+    </section><!-- /Hero Section -->
+
+    <!-- About Section -->
+    <section id="about" class="about section">
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row mb-5">
+          <div class="col-lg-6 pe-lg-5" data-aos="fade-right" data-aos-delay="200">
+            <h2 class="display-6 fw-bold mb-4">More Than <span>Just a Journey</span></h2>
+            <p class="lead mb-4">Low-cost, on-demand rides. Available in major cities across Nigeria.</p>
+            <div class="d-flex flex-wrap gap-4 mb-4">
+              <div class="stat-box">
+                <span class="stat-number"><span data-purecounter-start="0" data-purecounter-end="24" data-purecounter-duration="1" class="purecounter"></span>/7</span>
+                <span class="stat-label">Support</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number"><span data-purecounter-start="0" data-purecounter-end="100" data-purecounter-duration="1" class="purecounter"></span>%</span>
+                <span class="stat-label">Checks</span>
+              </div>
+              <div class="stat-box">
+                <span class="stat-number"><span data-purecounter-start="0" data-purecounter-end="4.8" data-purecounter-duration="1" class="purecounter"></span>/5</span>
+                <span class="stat-label">Ratings</span>
+              </div>
+            </div>
+            
+          </div>
+          <div class="col-lg-6" data-aos="fade-left" data-aos-delay="300">
+            <div class="image-stack">
+              <div class="image-stack-item image-stack-item-top" data-aos="zoom-in" data-aos-delay="400">
+                <img src="{% static 'assets/img/education/Untitled design (7).webp' %}" alt="Campus Life" class="img-fluid rounded-4 shadow-lg">
+              </div>
+              <div class="image-stack-item image-stack-item-bottom" data-aos="zoom-in" data-aos-delay="500">
+                <img src="{% static 'assets/img/education/Untitled design (6).webp' %}" alt="Students" class="img-fluid rounded-4 shadow-lg">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mission-vision-row g-4">
+          <div class="col-md-4" data-aos="fade-up" data-aos-delay="100">
+            <div class="value-card h-100">
+              <div class="card-icon">
+                <i class="bi bi-rocket-takeoff"></i>
+              </div>
+              <h3>Our Mission</h3>
+              <p>Providing secure, inexpensive, and trustworthy rides, connecting drivers and riders with a seamless experience that meets diverse transportation needs in Nigeria.</p>
+            </div>
+          </div>
+          <div class="col-md-4" data-aos="fade-up" data-aos-delay="200">
+            <div class="value-card h-100">
+              <div class="card-icon">
+                <i class="bi bi-eye"></i>
+              </div>
+              <h3>Our Vision</h3>
+              <p>To be the most reliable and innovative ride-hailing company in Nigeria, providing mobility solutions that enable communities and shape the future of urban mobility.</p>
+            </div>
+          </div>
+          <div class="col-md-4" data-aos="fade-up" data-aos-delay="300">
+            <div class="value-card h-100">
+              <div class="card-icon">
+                <i class="bi bi-star"></i>
+              </div>
+              <h3>Our Values</h3>
+              <p>Integrity, innovation, customer obsession, sustainability, inclusivity, and safety. We strive for perfection in every trip, ensuring consistent service to all.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /About Section -->
+
+    
+
+    <!-- Students Life Block Section -->
+    <section id="students-life-block" class="students-life-block section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Our Commitment to Safety</h2>
+        <p>Your safety is our top priority. We go the extra mile to ensure every ride is secure</p>
+      </div><!-- End Section Title -->
+
+      <div class="container" data-aos="fade-up" data-aos-delay="100">
+
+        <div class="row align-items-center gy-4">
+          <div class="col-lg-6" data-aos="fade-right" data-aos-delay="200">
+            <div class="students-life-img position-relative">
+              <img src="{% static 'assets/img/education/Untitled design (8).webp' %}" class="img-fluid rounded-4 shadow-sm" alt="Students Life">
+              <div class="img-overlay">
+                <h3>Fast, safe, and reliable rides – just a tap away</h3>
+                <a href="{% url 'signin' %}" class="explore-btn">Explore More <i class="bi bi-arrow-right"></i></a>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-lg-6" data-aos="fade-left" data-aos-delay="300">
+            <div class="students-life-content">
+
+              <div class="row g-4 mb-4">
+                <div class="col-md-6" data-aos="zoom-in" data-aos-delay="200">
+                  <div class="student-activity-item">
+                    <div class="icon-box">
+                      <i class="bi bi-shield-check"></i>
+                    </div>
+                    <h4>Background Checks</h4>
+                    <p>All drivers undergo comprehensive screening to ensure passenger safety and trust.</p>
+                  </div>
+                </div>
+
+                <div class="col-md-6" data-aos="zoom-in" data-aos-delay="300">
+                  <div class="student-activity-item">
+                    <div class="icon-box">
+                      <i class="bi bi-droplet"></i>
+                    </div>
+                    <h4>Sanitization</h4>
+                    <p>Vehicles are regularly sanitized to ensure a clean and safe ride experience.</p>
+                  </div>
+                </div>
+
+                <div class="col-md-6" data-aos="zoom-in" data-aos-delay="400">
+                  <div class="student-activity-item">
+                    <div class="icon-box">
+                      <i class="bi bi-person-check"></i>
+                    </div>
+                    <h4>Driver ID Verification</h4>
+                    <p>Confirm your driver’s identity, vehicle make, and license plate before starting the ride.</p>
+                  </div>
+                </div>
+
+                <div class="col-md-6" data-aos="zoom-in" data-aos-delay="500">
+                  <div class="student-activity-item">
+                    <div class="icon-box">
+                      <i class="bi bi-flag"></i>
+                    </div>
+                    <h4>Reporting</h4>
+                    <p>Report safety concerns discreetly through the app, ensuring your feedback remains confidential.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="students-life-cta" data-aos="fade-up" data-aos-delay="600">
+                <a href="{% url 'becomeadriver' %}" class="btn btn-primary">Become a Driver</a>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </section><!-- /Students Life Block Section -->
+
+    <!-- Testimonials Section -->
+    <section id="testimonials" class="testimonials section">
+
+      <!-- Section Title -->
+      <div class="container section-title" data-aos="fade-up">
+        <h2>Testimonials</h2>
+        <p>See what customers said about their experience with GoCab</p>
+      </div><!-- End Section Title -->
+
+      <div class="container">
+
+        <div class="testimonial-masonry">
+
+          <div class="testimonial-item" data-aos="fade-up">
+            <div class="testimonial-content">
+              <div class="quote-pattern">
+                <i class="bi bi-quote"></i>
+              </div>
+              <p>I use this app every day, and it has been amazing. The drivers are always courteous, and I get fast, comfortable rides for decent prices.</p>
+              <div class="client-info">
+                <div class="client-image">
+                  <img src="{% static 'assets/img/person/Untitled design (4).webp' %}" alt="Client">
+                </div>
+                <div class="client-details">
+                  <h3>Chijioke A.</h3>
+                  <span class="position">Frequent Rider</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-item highlight" data-aos="fade-up" data-aos-delay="100">
+            <div class="testimonial-content">
+              <div class="quote-pattern">
+                <i class="bi bi-quote"></i>
+              </div>
+              <p>I was skeptical at the beginning, but this app has changed my mind. Booking the ride is simple, and the ride itself is great. I will be using it again for certain.</p>
+              <div class="client-info">
+                <div class="client-image">
+                  <img src="{% static 'assets/img/person/Untitled design (2).webp' %}" alt="Client">
+                </div>
+                <div class="client-details">
+                  <h3>Adebayo M.</h3>
+                  <span class="position">First-Time User</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-item" data-aos="fade-up" data-aos-delay="200">
+            <div class="testimonial-content">
+              <div class="quote-pattern">
+                <i class="bi bi-quote"></i>
+              </div>
+              <p>As a business traveler, I need reliability and convenience, and this app delivers just that. I have never had an issue, and the drivers are always punctual.</p>
+              <div class="client-info">
+                <div class="client-image">
+                  <img src="{% static 'assets/img/person/Untitled design (5).webp' %}" alt="Client">
+                </div>
+                <div class="client-details">
+                  <h3>Emeka O.</h3>
+                  <span class="position">Business Traveler</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-item" data-aos="fade-up" data-aos-delay="300">
+            <div class="testimonial-content">
+              <div class="quote-pattern">
+                <i class="bi bi-quote"></i>
+              </div>
+              <p>The app makes my daily commute so much simpler. I love how fast and efficient it is—most definitely my go-to for traveling around the city.</p>
+              <div class="client-info">
+                <div class="client-image">
+                  <img src="{% static 'assets/img/person/Untitled design.webp' %}" alt="Client">
+                </div>
+                <div class="client-details">
+                  <h3>Kemi D.</h3>
+                  <span class="position">Commuter</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-item highlight" data-aos="fade-up" data-aos-delay="400">
+            <div class="testimonial-content">
+              <div class="quote-pattern">
+                <i class="bi bi-quote"></i>
+              </div>
+              <p>It has been a wonderful experience driving with this app. The system is user-friendly, the support team is always available to assist, and I am able to earn a decent income.</p>
+              <div class="client-info">
+                <div class="client-image">
+                  <img src="{% static 'assets/img/person/Untitled design (1).webp' %}" alt="Client">
+                </div>
+                <div class="client-details">
+                  <h3>Ngozi I.</h3>
+                  <span class="position">Driver Partner</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="testimonial-item" data-aos="fade-up" data-aos-delay="500">
+            <div class="testimonial-content">
+              <div class="quote-pattern">
+                <i class="bi bi-quote"></i>
+              </div>
+              <p>Being a student, this app has made attending class so much safer and convenient. I have no hesitation in using it, and the fees are very affordable.</p>
+              <div class="client-info">
+                <div class="client-image">
+                  <img src="{% static 'assets/img/person/Untitled design (3).webp' %}" alt="Client">
+                </div>
+                <div class="client-details">
+                  <h3>Osamudiamwen N</h3>
+                  <span class="position">Student</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section><!-- /Testimonials Section -->
+
+    
+
+  </main>
+
+  <footer id="footer" class="footer position-relative dark-background">
+
+    <div class="container footer-top">
+      <div class="row gy-4">
+        <div class="col-lg-4 col-md-6 footer-about">
+          <a href="index.html" class="logo d-flex align-items-center">
+            <span class="sitename">GoCab</span>
+          </a>
+          <div class="footer-contact pt-3">
+            <p class="mt-3"><strong>Phone:</strong> <span>+234 906 132 3021</span></p>
+            <p><strong>Email:</strong> <span>support@gocab.com</span></p>
+          </div>
+          <div class="social-links d-flex mt-4">
+            <a href=""><i class="bi bi-twitter-x"></i></a>
+            <a href=""><i class="bi bi-facebook"></i></a>
+            <a href=""><i class="bi bi-instagram"></i></a>
+            <a href=""><i class="bi bi-linkedin"></i></a>
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Our Services</h4>
+          <ul>
+            
+            <li><a href="#">Home</a></li>
+            <li><a href="#">Get a Ride</a></li>
+            <li><a href="#">Become a Driver</a></li>
+          </ul>
+        </div>
+
+        <div class="col-lg-2 col-md-3 footer-links">
+          <h4>Useful Links</h4>
+          <ul>
+            <li><a href="#">Terms of service</a></li>
+            <li><a href="#">Privacy policy</a></li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="container copyright text-center mt-4">
+      <p>© <span>Copyright</span> <strong class="px-1 sitename">GoCab</strong> <span>All Rights Reserved</span></p>
+    </div>
+
+  </footer>
+
+  <!-- Scroll Top -->
+  <a href="#" id="scroll-top" class="scroll-top d-flex align-items-center justify-content-center"><i class="bi bi-arrow-up-short"></i></a>
+
+  <!-- Preloader -->
+  <div id="preloader"></div>
+
+  <!-- Vendor JS Files -->
+  <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/php-email-form/validate.js' %}"></script>
+  <script src="{% static 'assets/vendor/aos/aos.js' %}"></script>
+  <script src="{% static 'assets/vendor/purecounter/purecounter_vanilla.js' %}"></script>
+  <script src="{% static 'assets/vendor/imagesloaded/imagesloaded.pkgd.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/isotope-layout/isotope.pkgd.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/swiper/swiper-bundle.min.js' %}"></script>
+  <script src="{% static 'assets/vendor/glightbox/js/glightbox.min.js' %}"></script>
+
+  <!-- Main JS File -->
+  <script src="{% static 'assets/js/main.js' %}"></script>
+
+</body>
+
+</html>

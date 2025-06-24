@@ -1,0 +1,914 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta content="width=device-width, initial-scale=1.0" name="viewport">
+  <title>Dashboard - Modern Admin Panel</title>
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+
+  <!-- Favicons -->
+  <link href="" rel="icon">
+  <link href="" rel="apple-touch-icon">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <style>
+	:root {
+		--primary-color: #08915e;
+		--primary-light: #e6f7f0;
+		--sidebar-width: 280px;
+		--transition: all 0.3s ease;
+	  }
+	  
+	  * {
+		margin: 0;
+		padding: 0;
+		box-sizing: border-box;
+	  }
+	  
+	  body {
+		font-family: 'Inter', sans-serif;
+		background-color: #f8fafc;
+		color: #333;
+		display: flex;
+		min-height: 100vh;
+	  }
+	  
+	  /* Sidebar Styles */
+	  #sidebar {
+		width: var(--sidebar-width);
+		background: white;
+		height: 100vh;
+		position: fixed;
+		top: 0;
+		left: 0;
+		box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+		transition: var(--transition);
+		z-index: 1000;
+		padding: 1.5rem;
+		overflow-y: auto;
+	  }
+	  
+	  .sidebar-header {
+		display: flex;
+		align-items: center;
+		margin-bottom: 2.5rem;
+		padding-bottom: 1.5rem;
+		border-bottom: 1px solid #eee;
+	  }
+	  
+	  .sidebar-logo {
+		font-size: 1.5rem;
+		font-weight: 700;
+		color: var(--primary-color);
+		text-decoration: none;
+		display: flex;
+		align-items: center;
+	  }
+	  
+	  .sidebar-logo i {
+		margin-right: 0.75rem;
+		font-size: 1.75rem;
+	  }
+	  
+	  .sidebar-menu {
+		list-style: none;
+	  }
+	  
+	  .menu-title {
+		font-size: 0.75rem;
+		text-transform: uppercase;
+		letter-spacing: 0.1em;
+		color: #64748b;
+		margin: 1.5rem 0 0.75rem;
+		font-weight: 600;
+	  }
+	  
+	  .menu-item {
+		margin-bottom: 0.5rem;
+		position: relative;
+	  }
+	  
+	  .menu-link {
+		display: flex;
+		align-items: center;
+		padding: 0.75rem 1rem;
+		border-radius: 0.5rem;
+		color: #64748b;
+		text-decoration: none;
+		font-weight: 500;
+		transition: var(--transition);
+	  }
+	  
+	  .menu-link:hover {
+		background-color: var(--primary-light);
+		color: var(--primary-color);
+	  }
+	  
+	  .menu-link.active {
+		background-color: var(--primary-light);
+		color: var(--primary-color);
+		font-weight: 600;
+	  }
+	  
+	  .menu-link i {
+		margin-right: 0.75rem;
+		font-size: 1.1rem;
+		width: 24px;
+		text-align: center;
+	  }
+	  
+	  .menu-badge {
+		margin-left: auto;
+		background-color: var(--primary-color);
+		color: white;
+		font-size: 0.7rem;
+		padding: 0.2rem 0.5rem;
+		border-radius: 10px;
+	  }
+	  
+	  /* Main Content */
+	  main {
+		margin-left: var(--sidebar-width);
+		flex-grow: 1;
+		padding: 2rem;
+		transition: var(--transition);
+	  }
+	  
+	  .page-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 2rem;
+	  }
+	  
+	  .page-title {
+		font-size: 1.75rem;
+		font-weight: 600;
+		color: #1e293b;
+	  }
+	  
+	  .card {
+		background: white;
+		border-radius: 0.75rem;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+		padding: 1.5rem;
+		margin-bottom: 1.5rem;
+	  }
+	  
+	  /* Trips Dashboard Styles */
+	  .trips-dashboard {
+		font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+		color: #333;
+		padding: 20px;
+		max-width: 1200px;
+		margin: 0 auto;
+	  }
+	  
+	  .trip-tabs {
+		display: flex;
+		border-bottom: 1px solid #e0e0e0;
+		margin-bottom: 20px;
+	  }
+	  
+	  .tab-btn {
+		padding: 12px 20px;
+		border: none;
+		background: none;
+		font-weight: 500;
+		font-size: 16px;
+		color: #666;
+		cursor: pointer;
+		position: relative;
+		display: flex;
+		align-items: center;
+		gap: 8px;
+	  }
+	  
+	  .tab-btn.active {
+		color: var(--primary-color);
+		font-weight: 600;
+	  }
+	  
+	  .tab-btn.active::after {
+		content: '';
+		position: absolute;
+		bottom: -1px;
+		left: 0;
+		right: 0;
+		height: 3px;
+		background: var(--primary-color);
+	  }
+	  
+	  .badge {
+		background: var(--primary-color);
+		color: white;
+		border-radius: 10px;
+		padding: 2px 8px;
+		font-size: 12px;
+		font-weight: 500;
+	  }
+	  
+	  .trip-section {
+		display: none;
+	  }
+	  
+	  .trip-section.active {
+		display: block;
+	  }
+	  
+	  .empty-state {
+		text-align: center;
+		padding: 40px 20px;
+		color: #666;
+	  }
+	  
+	  .empty-state i {
+		font-size: 40px;
+		margin-bottom: 15px;
+		color: #e0e0e0;
+	  }
+	  
+	  .trip-card {
+		background: white;
+		border-radius: 12px;
+		box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+		padding: 20px;
+		margin-bottom: 15px;
+		transition: var(--transition);
+	  }
+	  
+	  .trip-card:hover {
+		transform: translateY(-2px);
+		box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+	  }
+	  
+	  .trip-header {
+		display: flex;
+		justify-content: space-between;
+		margin-bottom: 15px;
+	  }
+	  
+	  .trip-meta {
+		display: flex;
+		gap: 15px;
+		font-size: 14px;
+		color: #666;
+	  }
+	  
+	  .trip-price {
+		font-weight: 600;
+		font-size: 18px;
+		color: var(--primary-color);
+	  }
+	  
+	  .trip-date {
+		font-size: 14px;
+		color: #666;
+	  }
+	  
+	  .trip-route {
+		position: relative;
+		padding: 0 0 15px 25px;
+		margin: 15px 0;
+	  }
+	  
+	  .route-point {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		margin-bottom: 5px;
+		position: relative;
+		z-index: 2;
+	  }
+	  
+	  .route-point i {
+		font-size: 14px;
+	  }
+	  
+	  .route-point.pickup i {
+		color: var(--primary-color);
+	  }
+	  
+	  .route-point.dropoff i {
+		color: #ff4757;
+	  }
+	  
+	  .route-point.completed i {
+		color: var(--primary-color);
+	  }
+	  
+	  .route-point.current i {
+		color: #2196F3;
+	  }
+	  
+	  .route-point.upcoming i {
+		color: #666;
+	  }
+	  
+	  .route-line {
+		position: absolute;
+		left: 30px;
+		top: 15px;
+		bottom: 15px;
+		width: 2px;
+		background: #e0e0e0;
+		z-index: 1;
+	  }
+	  
+	  .trip-route.compact .route-line {
+		top: 10px;
+		bottom: 10px;
+	  }
+	  
+	  .location {
+		font-size: 15px;
+	  }
+	  
+	  .trip-progress {
+		margin: 15px 0;
+	  }
+	  
+	  .progress-bar {
+		height: 6px;
+		background: #f0f0f0;
+		border-radius: 3px;
+		overflow: hidden;
+		margin-bottom: 8px;
+	  }
+	  
+	  .progress-fill {
+		height: 100%;
+		background: linear-gradient(to right, var(--primary-color), #06d6a0);
+		border-radius: 3px;
+	  }
+	  
+	  .progress-labels {
+		display: flex;
+		justify-content: space-between;
+		font-size: 12px;
+		color: #666;
+	  }
+	  
+	  .progress-labels .current {
+		color: var(--primary-color);
+		font-weight: 500;
+	  }
+	  
+	  .trip-footer {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		padding-top: 15px;
+		border-top: 1px solid #f0f0f0;
+	  }
+	  
+	  .passenger-info {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+	  }
+	  
+	  .passenger-avatar {
+		width: 40px;
+		height: 40px;
+		border-radius: 50%;
+		background: linear-gradient(135deg, var(--primary-color), #06d6a0);
+		color: white;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 500;
+	  }
+	  
+	  .passenger-name {
+		font-weight: 500;
+	  }
+	  
+	  .passenger-rating {
+		font-size: 13px;
+		color: #666;
+	  }
+	  
+	  .passenger-rating i {
+		color: #FFC107;
+		font-size: 12px;
+	  }
+	  
+	  .passenger-message {
+		font-size: 13px;
+		color: #666;
+		margin-top: 2px;
+	  }
+	  
+	  .passenger-message i {
+		color: var(--primary-color);
+		margin-right: 5px;
+	  }
+	  
+	  .trip-actions {
+		display: flex;
+		gap: 10px;
+	  }
+	  
+	  .decline-btn, .accept-btn, .navigate-btn, .complete-btn {
+		padding: 8px 16px;
+		border-radius: 8px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: var(--transition);
+		display: flex;
+		align-items: center;
+		gap: 5px;
+		border: none;
+	  }
+	  
+	  .decline-btn {
+		background: #f5f5f5;
+		color: #666;
+	  }
+	  
+	  .decline-btn:hover {
+		background: #e0e0e0;
+	  }
+	  
+	  .accept-btn {
+		background: var(--primary-color);
+		color: white;
+	  }
+	  
+	  .accept-btn:hover {
+		background: #067a4e;
+	  }
+	  
+	  .navigate-btn {
+		background: #2196F3;
+		color: white;
+	  }
+	  
+	  .navigate-btn:hover {
+		background: #1976D2;
+	  }
+	  
+	  .complete-btn {
+		background: #4CAF50;
+		color: white;
+	  }
+	  
+	  .complete-btn:hover {
+		background: #3d8b40;
+	  }
+	  
+	  .status-badge {
+		padding: 4px 10px;
+		border-radius: 12px;
+		font-size: 12px;
+		font-weight: 500;
+	  }
+	  
+	  .status-badge.in-progress {
+		background: #e3f2fd;
+		color: #2196F3;
+	  }
+	  
+	  .trip-filters {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		margin-bottom: 15px;
+	  }
+	  
+	  .time-filter {
+		padding: 8px 12px;
+		border-radius: 8px;
+		border: 1px solid #e0e0e0;
+		background: white;
+	  }
+	  
+	  .earnings-summary {
+		font-weight: 600;
+		color: var(--primary-color);
+	  }
+	  
+	  .earnings-breakdown {
+		display: flex;
+		gap: 10px;
+		font-size: 12px;
+		color: #666;
+	  }
+	  
+	  .active-trip {
+		border-left: 4px solid var(--primary-color);
+	  }
+	  
+	  .inline-form {
+		margin: 0;
+		display: inline;
+	  }
+	  
+	  /* Responsive Adjustments */
+	  @media (max-width: 992px) {
+		#sidebar {
+		  transform: translateX(-100%);
+		}
+		
+		#sidebar.active {
+		  transform: translateX(0);
+		}
+		
+		main {
+		  margin-left: 0;
+		}
+	  }
+	  
+	  @media (max-width: 768px) {
+		.trip-tabs {
+		  overflow-x: auto;
+		  padding-bottom: 5px;
+		}
+		
+		.trip-footer {
+		  flex-direction: column;
+		  gap: 15px;
+		  align-items: flex-start;
+		}
+		
+		.trip-actions {
+		  width: 100%;
+		}
+		
+		.decline-btn, .accept-btn, .navigate-btn, .complete-btn {
+		  flex: 1;
+		  justify-content: center;
+		}
+	  }
+   
+  </style>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <div id="sidebar">
+    <div class="sidebar-header">
+      <a href="#" class="sidebar-logo">
+        <i class="fas fa-car"></i>  
+        <span>GoCab</span>
+      </a>
+    </div>
+
+    <ul class="sidebar-menu">
+      <li class="menu-title">MAIN</li>
+      
+      <li class="menu-item">
+        <a href="{% url 'driver_dashboard' %}" class="menu-link">
+          <i class="fas fa-home"></i>
+          <span>Overview</span>
+        </a>
+      </li>
+	  <li class="menu-item">
+        <a href="{% url 'driver_profile' %}" class="menu-link">
+		<i class="fas fa-user"></i>
+          <span>Profile</span>
+        </a>
+      </li>
+	  <li class="menu-item">
+        <a href="{% url 'driver_earnings' %}" class="menu-link">
+		<i class="fas fa-wallet"></i>
+          <span>Earnings</span>
+        </a>
+      </li>
+      
+      
+	  <li class="menu-item">
+        <a href="#" class="menu-link active">
+            <i class="fas fa-bell"></i>  
+          <span>Notification</span>
+          <span class="menu-badge">12</span>
+        </a>
+      </li>
+
+      <li class="menu-title">SETTINGS</li>
+      
+      
+      
+      <li class="menu-item">
+        <a href="{% url 'logout' %}" class="menu-link">
+          <i class="fas fa-sign-out-alt"></i>
+          <span>Logout</span>
+        </a>
+      </li>
+      
+     
+
+      
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <div class="page-header">
+      
+    </div>
+
+	<div class="trips-dashboard">
+		<!-- Trip Status Tabs -->
+		<div class="trip-tabs">
+		  <button class="tab-btn active" data-tab="new-trips">New Requests <span class="badge">{{ new_requests }}</span></button>
+		  <button class="tab-btn" data-tab="starting-trips">Starting Trip <span class="badge">{{ accepted_rides|length }}</span></button>
+		  <button class="tab-btn" data-tab="active-trips">Active Trips <span class="badge">{{ active_trips }}</span></button>
+		  <button class="tab-btn" data-tab="completed-trips">Completed <span class="badge">{{ completed_trips}}</span></button>
+		</div>
+	  
+		<!-- New Trips Section -->
+<div class="trip-section active" id="new-trips">
+	{% for ride in pending_rides %}
+	  {% if ride.status == 'pending' and not ride.driver %}
+	  <div class="trip-card">
+		<div class="trip-header">
+		  <div class="trip-meta">
+			<span class="trip-time">{{ ride.requested_at|timesince }} ago</span>
+			<span class="trip-distance">{{ ride.distance }} miles away</span>
+		  </div>
+		  <div class="trip-price">${{ ride.fare|floatformat:2 }}</div>
+		</div>
+		
+		<div class="trip-route">
+		  <div class="route-point pickup">
+			<i class="fas fa-circle"></i>
+			<div class="location">{{ ride.current_location }}</div>
+		  </div>
+		  <div class="route-line"></div>
+		  <div class="route-point dropoff">
+			<i class="fas fa-map-marker-alt"></i>
+			<div class="location">{{ ride.destination }}</div>
+		  </div>
+		</div>
+		
+		<div class="trip-footer">
+		  <div class="passenger-info">
+			<div class="passenger-avatar">{{ ride.passenger.first_name|first }}{{ ride.passenger.last_name|first }}</div>
+			<div class="passenger-details">
+			  <div class="passenger-name">{{ ride.passenger.get_full_name }}</div>
+			  <div class="passenger-rating"><i class="fas fa-star"></i> {{ ride.passenger.rating|default:"5.0" }}</div>
+			</div>
+		  </div>
+		  <div class="trip-actions">
+			{% if ride.status == 'pending' and not ride.driver %}
+			  <form method="post" action="{% url 'accept_ride' ride.id %}" class="inline-form">
+				{% csrf_token %}
+				<button type="submit" class="accept-btn"><i class="fas fa-check"></i> Accept</button>
+			  </form>
+			{% elif ride.status == 'accepted' and ride.driver == request.user %}
+			  <form method="post" action="{% url 'start_trip' ride.id %}" class="inline-form">
+				{% csrf_token %}
+				<button type="submit" class="start-btn"><i class="fas fa-play"></i> Start Trip</button>
+			  </form>
+			{% endif %}
+		  </div>
+		</div>
+	  </div>
+	  {% endif %}
+	{% empty %}
+	  <div class="empty-state">
+		<i class="fas fa-car"></i>
+		<p>No new ride requests</p>
+	  </div>
+	{% endfor %}
+  </div>
+
+  <!-- Starting Trip Section -->
+<div class="trip-section" id="starting-trips">
+	{% for ride in accepted_rides %}
+	<div class="trip-card">
+	  <div class="trip-header">
+		<div class="trip-meta">
+		  <span class="trip-time">{{ ride.accepted_at|timesince }} ago</span>
+		  <span class="trip-distance">{{ ride.distance }} miles</span>
+		</div>
+		<div class="trip-price">${{ ride.fare|floatformat:2 }}</div>
+	  </div>
+  
+	  <div class="trip-route">
+		<div class="route-point pickup">
+		  <i class="fas fa-circle"></i>
+		  <div class="location">{{ ride.current_location }}</div>
+		</div>
+		<div class="route-line"></div>
+		<div class="route-point dropoff">
+		  <i class="fas fa-map-marker-alt"></i>
+		  <div class="location">{{ ride.destination }}</div>
+		</div>
+	  </div>
+  
+	  <div class="trip-footer">
+		<div class="passenger-info">
+		  <div class="passenger-avatar">{{ ride.passenger.first_name|first }}{{ ride.passenger.last_name|first }}</div>
+		  <div class="passenger-details">
+			<div class="passenger-name">{{ ride.passenger.get_full_name }}</div>
+			<div class="passenger-rating"><i class="fas fa-star"></i> {{ ride.passenger.rating|default:"5.0" }}</div>
+		  </div>
+		</div>
+		<div class="trip-actions">
+		  <form method="post" action="{% url 'start_trip' ride.id %}" class="inline-form">
+			{% csrf_token %}
+			<button type="submit" class="start-btn"><i class="fas fa-play"></i> Start Trip</button>
+		  </form>
+		</div>
+	  </div>
+	</div>
+	{% empty %}
+	<div class="empty-state">
+	  <i class="fas fa-car"></i>
+	  <p>No rides ready to start</p>
+	</div>
+	{% endfor %}
+  </div>
+  
+	  
+		<!-- Active Trips Section -->
+		<div class="trip-section" id="active-trips">
+		  {% for ride in active_rides %}
+		  <div class="trip-card active-trip">
+			<div class="trip-header">
+			  <div class="trip-status">
+				<span class="status-badge in-progress">In Progress</span>
+				<span class="trip-timer"><i class="fas fa-clock"></i> {{ ride.started_at|timesince }}</span>
+			  </div>
+			  <div class="trip-price">${{ ride.fare|floatformat:2 }}</div>
+			</div>
+			
+			<div class="trip-progress">
+			  <div class="progress-bar">
+				<div class="progress-fill" style="width: 50%"></div>
+			  </div>
+			  <div class="progress-labels">
+				<span>Pickup</span>
+				<span class="current">En route</span>
+				<span>Dropoff</span>
+			  </div>
+			</div>
+			
+			<div class="trip-route">
+			  <div class="route-point completed">
+				<i class="fas fa-check-circle"></i>
+				<div class="location">{{ ride.current_location }}</div>
+			  </div>
+			  <div class="route-line"></div>
+			  <div class="route-point current">
+				<i class="fas fa-car"></i>
+				<div class="location">En route</div>
+			  </div>
+			  <div class="route-line"></div>
+			  <div class="route-point upcoming">
+				<i class="fas fa-map-marker-alt"></i>
+				<div class="location">{{ ride.destination }}</div>
+			  </div>
+			</div>
+			
+			<div class="trip-footer">
+			  <div class="passenger-info">
+				<div class="passenger-avatar">{{ ride.passenger.first_name|first }}{{ ride.passenger.last_name|first }}</div>
+				<div class="passenger-details">
+				  <div class="passenger-name">{{ ride.passenger.get_full_name }}</div>
+				  {% if ride.passenger_message %}
+				  <div class="passenger-message"><i class="fas fa-comment-alt"></i> "{{ ride.passenger_message }}"</div>
+				  {% endif %}
+				</div>
+			  </div>
+			  <div class="trip-actions">
+				<button class="navigate-btn"><i class="fas fa-directions"></i> Navigate</button>
+				<form method="post" action="{% url 'complete_trip' ride.id %}" class="inline-form">
+				  {% csrf_token %}
+				  <button type="submit" class="complete-btn">Complete Trip</button>
+				</form>
+			  </div>
+			</div>
+		  </div>
+		  {% empty %}
+		  <div class="empty-state">
+			<i class="fas fa-car"></i>
+			<p>No active trips</p>
+		  </div>
+		  {% endfor %}
+		</div>
+	  
+		<!-- Completed Trips Section -->
+		<div class="trip-section" id="completed-trips">
+		  <div class="trip-filters">
+			<select class="time-filter">
+			  <option>Today</option>
+			  <option>This Week</option>
+			  <option>This Month</option>
+			  <option>All Time</option>
+			</select>
+			<div class="earnings-summary">Total: ${{ total_earnings|floatformat:2 }}</div>
+		  </div>
+		  
+		  {% for ride in completed_rides %}
+		  <div class="trip-card completed">
+			<div class="trip-header">
+			  <div class="trip-date">{{ ride.completed_at|date:"M j, g:i A" }}</div>
+			  <div class="trip-price">${{ ride.fare|floatformat:2 }}</div>
+			</div>
+			
+			<div class="trip-route compact">
+			  <div class="route-point">
+				<i class="fas fa-circle"></i>
+				<div class="location">{{ ride.current_location }}</div>
+			  </div>
+			  <div class="route-line"></div>
+			  <div class="route-point">
+				<i class="fas fa-map-marker-alt"></i>
+				<div class="location">{{ ride.destination }}</div>
+			  </div>
+			</div>
+			
+			<div class="trip-footer">
+			  <div class="passenger-info">
+				<div class="passenger-avatar">{{ ride.passenger.first_name|first }}{{ ride.passenger.last_name|first }}</div>
+				<div class="passenger-details">
+				  <div class="passenger-name">{{ ride.passenger.get_full_name }}</div>
+				  <div class="passenger-rating"><i class="fas fa-star"></i> {{ ride.rating|default:"5.0" }}</div>
+				</div>
+			  </div>
+			  <div class="trip-earnings">
+				<div class="earnings-breakdown">
+				  <span>Base fare: ${{ ride.base_fare|floatformat:2 }}</span>
+				  <span>Time: ${{ ride.time_fare|floatformat:2 }}</span>
+				  <span>Tip: ${{ ride.tip|floatformat:2 }}</span>
+				</div>
+			  </div>
+			</div>
+		  </div>
+		  {% empty %}
+		  <div class="empty-state">
+			<i class="fas fa-car"></i>
+			<p>No completed trips yet</p>
+		  </div>
+		  {% endfor %}
+		</div>
+	  </div>
+	  
+	  
+		
+      
+   
+  </main>
+
+  <script>
+    // Toggle mobile sidebar
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add click event to checkbox items
+      document.querySelectorAll('.menu-checkbox input').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+          const menuLink = this.closest('.menu-link');
+          if (this.checked) {
+            menuLink.classList.add('active');
+          } else {
+            menuLink.classList.remove('active');
+          }
+        });
+      });
+
+      // Simulate checked state for the "Orders" item
+      document.querySelector('.menu-link.active').addEventListener('click', function(e) {
+        e.preventDefault();
+      });
+
+      // Initialize checkboxes based on your image
+      const checkedItems = ['Orders'];
+      document.querySelectorAll('.menu-link').forEach(link => {
+        if (checkedItems.includes(link.querySelector('span').textContent)) {
+          const checkbox = link.querySelector('input');
+          if (checkbox) {
+            checkbox.checked = true;
+            link.classList.add('active');
+          }
+        }
+      });
+    });
+  </script>
+  <script>
+	// Tab switching functionality
+	document.querySelectorAll('.tab-btn').forEach(btn => {
+	  btn.addEventListener('click', () => {
+		// Remove active class from all tabs and sections
+		document.querySelectorAll('.tab-btn').forEach(t => t.classList.remove('active'));
+		document.querySelectorAll('.trip-section').forEach(s => s.classList.remove('active'));
+		
+		// Add active class to clicked tab and corresponding section
+		btn.classList.add('active');
+		const tabId = btn.getAttribute('data-tab');
+		document.getElementById(tabId).classList.add('active');
+	  });
+	});
+  </script>
+</body>
+</html>
