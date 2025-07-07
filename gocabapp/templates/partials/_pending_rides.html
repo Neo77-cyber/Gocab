@@ -1,0 +1,277 @@
+<style>
+    /* Ride Card Component */
+    .trip-card {
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      padding: 20px;
+      transition: var(--transition);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid #e2e8f0;
+    }
+    
+    .trip-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+  
+    /* New Ride Highlight Animation */
+    @keyframes highlight {
+      0% { box-shadow: 0 0 0 0 rgba(8, 145, 94, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(8, 145, 94, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(8, 145, 94, 0); }
+    }
+    
+    .new-ride {
+      animation: highlight 1.5s ease-out;
+    }
+  
+    /* Card Header */
+    .trip-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    
+    .trip-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 14px;
+      color: #666;
+    }
+    
+    .trip-price {
+      font-weight: 600;
+      font-size: 1.25rem;
+      color: var(--primary-color);
+    }
+  
+    /* Route Visualization */
+    .trip-route {
+      position: relative;
+      padding-left: 24px;
+      margin: 16px 0;
+    }
+    
+    .route-point {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    
+    .route-point i {
+      font-size: 14px;
+      position: relative;
+      z-index: 2;
+      background: white;
+      padding: 2px;
+      border-radius: 50%;
+    }
+    
+    .route-point.pickup i {
+      color: var(--primary-color);
+      font-size: 12px;
+    }
+    
+    .route-point.dropoff i {
+      color: #ff4757;
+      font-size: 16px;
+    }
+    
+    .route-line {
+      position: absolute;
+      left: 11px;
+      top: 18px;
+      bottom: 18px;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary-color), #ff4757);
+      opacity: 0.7;
+      z-index: 1;
+    }
+    
+    .location {
+      font-size: 15px;
+      font-weight: 500;
+    }
+  
+    /* Card Footer */
+    .trip-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 16px;
+      border-top: 1px solid #f0f0f0;
+    }
+    
+    .passenger-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .passenger-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary-color), #3b82f6);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .passenger-name {
+      font-weight: 600;
+    }
+    
+    .passenger-rating {
+      font-size: 13px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 2px;
+    }
+    
+    .passenger-rating i {
+      color: #FFC107;
+    }
+  
+    /* Accept Button */
+    .accept-btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+      font-size: 0.9rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    
+    .accept-btn:hover {
+      background: #067a4e;
+      transform: translateY(-1px);
+    }
+    
+    .accept-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .accept-btn i {
+      font-size: 0.9rem;
+    }
+  
+    /* Empty State */
+    .empty-state {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px 20px;
+      color: #888;
+      background: #f9f9f9;
+      border-radius: 12px;
+    }
+    
+    .empty-state i {
+      font-size: 40px;
+      color: #e0e0e0;
+      margin-bottom: 12px;
+    }
+  
+    /* Status Badge */
+    .status-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 0.7rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      background: #f8fafc;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
+    }
+  
+    /* Mobile Styles */
+    @media (max-width: 480px) {
+      .trip-card {
+        padding: 16px;
+      }
+      
+      .trip-footer {
+        flex-direction: column;
+        gap: 12px;
+      }
+      
+      .trip-actions {
+        width: 100%;
+      }
+      
+      .accept-btn {
+        width: 100%;
+        justify-content: center;
+      }
+    }
+  </style>
+{% for ride in pending_rides %}
+<div class="trip-card" data-ride-id="{{ ride.id }}">
+    <div class="trip-header">
+        <div class="trip-meta">
+            <span class="trip-time">{{ ride.requested_at|timesince }} ago</span>
+            <span class="trip-distance">{{ ride.distance_km|floatformat:1 }} km away</span>
+        </div>
+        <div class="trip-price">₦{{ ride.total_fare|floatformat:2 }}</div>
+    </div>
+    
+    <div class="trip-route">
+        <div class="route-point pickup">
+            <i class="fas fa-circle"></i>
+            <div class="location">{{ ride.current_location }}</div>
+        </div>
+        <div class="route-line"></div>
+        <div class="route-point dropoff">
+            <i class="fas fa-map-marker-alt"></i>
+            <div class="location">{{ ride.destination }}</div>
+        </div>
+    </div>
+    
+    <div class="trip-footer">
+        <div class="passenger-info">
+            <div class="passenger-avatar">
+                {{ ride.passenger.first_name|first }}{{ ride.passenger.last_name|first }}
+            </div>
+            <div class="passenger-details">
+                <div class="passenger-name">{{ ride.passenger.get_full_name }}</div>
+                <div class="passenger-rating">
+                    <i class="fas fa-star"></i> {{ ride.passenger.rider.rating|default:"5.0" }}
+                </div>
+            </div>
+        </div>
+        <div class="trip-actions">
+            <form method="post" action="{% url 'accept_ride' ride.id %}" class="accept-ride-form">
+                {% csrf_token %}
+                <input type="hidden" name="ride_id" value="{{ ride.id }}">
+                <button type="button" class="accept-btn">
+                    <i class="fas fa-check"></i> Accept
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% empty %}
+<div class="empty-state">
+    <i class="fas fa-car"></i>
+    <p>No new ride requests</p>
+</div>
+{% endfor %}

@@ -19,6 +19,18 @@
   <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
+  <script>
+    function initApp() {
+      // Load Google Maps
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initAutocomplete`;
+      script.async = true;
+      script.defer = true;
+      document.head.appendChild(script);
+    }
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+
   <style>
     :root {
       --primary-color: #08915e;
@@ -826,204 +838,132 @@
       gap: 5px;
     }
   }
-  /* Ride Tracking Card Styling */
-.tracking-card {
-  max-width: 500px;
-  margin: 20px auto;
-  padding: 25px;
+/* Ride Tracking Card Container */
+#rideTrackingCard {
+  background-color: #ffffff;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  background: #ffffff;
-  font-family: 'Segoe UI', Roboto, sans-serif;
-  position: relative;
-  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  max-width: 400px;
+  margin: 20px auto;
+  transition: all 0.3s ease;
+  border: 1px solid #e1e1e1;
 }
 
-.tracking-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-  padding-bottom: 15px;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-.tracking-header h3 {
-  margin: 0;
-  font-size: 1.4rem;
-  color: #333;
-  font-weight: 600;
-}
-
-.tracking-code {
-  background: #f8f8f8;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #555;
-}
-
-.tracking-code span {
-  color: #0066ff;
-}
-
-.tracking-animation {
-  position: relative;
-  height: 100px;
-  margin: 30px 0;
-}
-
-.car-container {
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 100%;
-  z-index: 2;
-}
-
-.fa-car-side {
-  font-size: 2.5rem;
-  color: #0066ff;
-  position: absolute;
-  left: 0;
-  animation: drive 3s linear infinite;
-}
-
-.road {
-  position: absolute;
-  bottom: 0;
-  width: 100%;
-  height: 4px;
-  background: #ddd;
-  border-radius: 2px;
-}
-
-.road .line {
-  position: absolute;
-  width: 40px;
-  height: 2px;
-  background: #fff;
-  animation: roadLines 1s linear infinite;
-}
-
-.road .line:nth-child(1) {
-  left: 20%;
-}
-.road .line:nth-child(2) {
-  left: 50%;
-}
-.road .line:nth-child(3) {
-  left: 80%;
-}
-
-.pulse-effect {
-  position: absolute;
-  width: 100px;
-  height: 100px;
-  background: rgba(0, 102, 255, 0.1);
-  border-radius: 50%;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-  animation: pulse 2s infinite;
-  z-index: 1;
-}
-
-.tracking-details {
-  margin: 30px 0;
-}
-
-.detail-item {
-  display: flex;
-  align-items: center;
-  margin-bottom: 15px;
-  font-size: 1rem;
-  color: #555;
-}
-
-.detail-item i {
-  margin-right: 12px;
-  font-size: 1.2rem;
-  color: #0066ff;
-  width: 24px;
+/* Shared State Styles */
+#searchingState, 
+#driverAssignedState {
   text-align: center;
+  padding: 20px 0;
+  transition: opacity 0.5s ease;
 }
 
-.detail-item span span {
-  font-weight: 600;
-  color: #333;
-}
-
-.tracking-map {
-  height: 150px;
-  background: #f5f5f5;
-  border-radius: 8px;
-  margin: 20px 0;
+/* Searching State */
+#searchingState {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
-  color: #999;
-  border: 1px dashed #ddd;
+  gap: 15px;
 }
 
-.cancel-btn {
+#searchingState i.fas {
+  font-size: 3rem;
+  color: #4a6bff;
+  animation: pulse 2s infinite;
+}
+
+#searchingState p {
+  font-size: 1.2rem;
+  color: #333;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* Driver Assigned State */
+#driverAssignedState {
+  display: none; /* Will be shown via JS */
+}
+
+#driverInfo {
+  background-color: #f8f9ff;
+  border-radius: 10px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+#driverInfo p {
+  margin: 8px 0;
+  font-size: 1.1rem;
+  color: #444;
+}
+
+#driverInfo span {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+#estimatedArrival {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #4a6bff;
+}
+
+/* Cancel Button */
+#cancelRideBtn {
   width: 100%;
   padding: 12px;
-  background: #fff;
-  color: #ff4444;
-  border: 1px solid #ffdddd;
+  background-color: #fff;
+  color: #ff4a4a;
+  border: 1px solid #ff4a4a;
   border-radius: 8px;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: all 0.2s ease;
+  margin-top: 20px;
 }
 
-.cancel-btn i {
-  margin-right: 8px;
+#cancelRideBtn:hover {
+  background-color: #ffebeb;
 }
 
-.cancel-btn:hover {
-  background: #ffeeee;
+#cancelRideBtn:active {
+  transform: scale(0.98);
 }
 
-/* Animations */
-@keyframes drive {
-  0% { left: 0; transform: translateY(-50%) scaleX(1); }
-  49% { transform: translateY(-50%) scaleX(1); }
-  50% { left: 100%; transform: translateY(-50%) scaleX(-1); }
-  99% { transform: translateY(-50%) scaleX(-1); }
-  100% { left: 0; transform: translateY(-50%) scaleX(1); }
-}
-
-@keyframes roadLines {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-100px); }
-}
-
+/* Animation for Searching State */
 @keyframes pulse {
-  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.7; }
-  70% { transform: translate(-50%, -50%) scale(1.2); opacity: 0; }
-  100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
-/* Responsive adjustments */
-@media (max-width: 600px) {
-  .tracking-card {
-    padding: 20px;
-    margin: 10px;
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+  #rideTrackingCard {
+    padding: 18px;
+    margin: 15px;
   }
   
-  .tracking-header h3 {
-    font-size: 1.2rem;
+  #searchingState i.fas {
+    font-size: 2.5rem;
   }
   
-  .tracking-animation {
-    margin: 20px 0;
+  #searchingState p {
+    font-size: 1.1rem;
+  }
+  
+  #driverInfo p {
+    font-size: 1rem;
   }
 }
   </style>
@@ -1126,42 +1066,24 @@
       </form>
     </div>
 
-    <!-- Ride Tracking Card (Initially Hidden) -->
-<div id="rideTrackingCard" class="card tracking-card" style="display:none;">
-  <div class="tracking-header">
-    <h3>Finding you a driver</h3>
-    <div class="tracking-code">Code: <span id="trackingCode">--</span></div>
-  </div>
-  
-  <div class="tracking-animation">
-    <div class="car-container">
-      <i class="fas fa-car-side"></i>
-      <div class="road">
-        <div class="line"></div>
-        <div class="line"></div>
-        <div class="line"></div>
+    <div id="rideTrackingCard" style="display:none;">
+      <div id="trackingStatus">Finding you a driver</div>
+      <!-- Add these elements if missing -->
+      <div id="searchingState">
+        <i class="fas fa-car-side"></i>
+        <p>Searching....</p>
       </div>
+      
+      <div id="driverAssignedState" style="display:none;">
+        <div id="driverInfo">
+          <p>Driver: <span id="driverName"></span></p>
+          <p>Car: <span id="vehicleInfo"></span></p>
+        </div>
+        <p>ETA: <span id="estimatedArrival"></span></p>
+      </div>
+      
+      <button id="cancelRideBtn">Cancel Ride</button>
     </div>
-    <div class="pulse-effect"></div>
-  </div>
-  
-  <div class="tracking-details">
-    <div class="detail-item">
-      <i class="fas fa-clock"></i>
-      <span>Estimated arrival: <span id="estimatedArrival">--</span></span>
-    </div>
-    <div class="detail-item">
-      <i class="fas fa-map-marker-alt"></i>
-      <span>Driver is <span id="driverDistance">--</span> away</span>
-    </div>
-  </div>
-  
-  <div class="tracking-map" id="trackingMap"></div>
-  
-  <button id="cancelRideBtn" class="cancel-btn">
-    <i class="fas fa-times"></i> Cancel Ride
-  </button>
-</div>
     
    
     <div class="card">
@@ -1312,28 +1234,153 @@
   </main>
 
   <script>
-    const GOOGLE_MAPS_API_KEY = 'AIzaSyAUMHV6_Zn7ThpeGbl8qC6gMmfvxKU7IgI';
+const GOOGLE_MAPS_API_KEY = 'AIzaSyAUMHV6_Zn7ThpeGbl8qC6gMmfvxKU7IgI';
 let rideStatusInterval = null;
 let currentRideId = null;
+let rideSocket = null;
+
+// Initialize WebSocket connection
+function connectWebSocket() {
+    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    rideSocket = new WebSocket(
+        `${protocol}//${window.location.host}/ws/ride/updates/`
+    );
+
+    rideSocket.onopen = () => {
+        console.log("Connected to ride updates");
+        if (currentRideId) {
+            subscribeToRide(currentRideId);
+        }
+    };
+
+    rideSocket.onerror = (error) => {
+        console.error("WebSocket error:", error);
+    };
+
+    rideSocket.onclose = () => {
+        console.log("Disconnected from ride updates");
+        setTimeout(connectWebSocket, 3000);
+    };
+
+    rideSocket.onmessage = (e) => {
+        console.log("WebSocket update:", e.data);
+        const data = JSON.parse(e.data);
+        console.log("WebSocket update:", data);
+        handleWebSocketUpdate(data);
+    };
+}
+
+// Subscribe to ride updates
+function subscribeToRide(rideId) {
+    if (rideSocket && rideSocket.readyState === WebSocket.OPEN) {
+        rideSocket.send(JSON.stringify({
+            action: 'subscribe',
+            ride_id: rideId
+        }));
+    }
+}
+
+function handleWebSocketUpdate(data) {
+    if (data.type === 'ride_update') {
+        const statusMap = {
+            'accepted': 'accepted',
+            'started': 'started',
+            'completed': 'completed',
+            'cancelled': 'cancelled'
+        };
+        
+        updateRideStatusUI({
+            status: statusMap[data.event],
+            driver: data.data?.driver,
+            eta: data.data?.eta,
+            fare: data.data?.fare
+        });
+    }
+}
+
+// Utility Functions
+function hideFareEstimate() {
+    const fareEstimate = document.getElementById('fareEstimate');
+    if (fareEstimate) {
+        fareEstimate.style.display = 'none';
+    }
+}
+
+function setLoadingState(button, isLoading) {
+    if (!button) return;
+    
+    if (isLoading) {
+        button.disabled = true;
+        const spinner = document.createElement('i');
+        spinner.className = 'fas fa-spinner fa-spin';
+        button.innerHTML = '';
+        button.appendChild(spinner);
+        button.appendChild(document.createTextNode(' Calculating...'));
+    } else {
+        button.disabled = false;
+        button.innerHTML = '<i class="fas fa-calculator"></i> Calculate Fare';
+    }
+}
+
+// Global callback function for Google Maps API
+window.initAutocomplete = function() {
+    console.log("Google Maps callback initiated");
+    
+    const currentLocationField = document.getElementById('current-location');
+    const destinationField = document.getElementById('destination');
+    
+    if (!currentLocationField || !destinationField) {
+        console.error("Location input fields not found");
+        return;
+    }
+
+    if (!window.google?.maps?.places) {
+        console.error("Google Maps Places API not loaded");
+        return;
+    }
+
+    try {
+        const options = {
+            types: ['geocode'],
+            fields: ['formatted_address', 'geometry', 'place_id'],
+            componentRestrictions: {country: 'ng'}
+        };
+
+        const currentLocationAutocomplete = new google.maps.places.Autocomplete(currentLocationField, options);
+        const destinationAutocomplete = new google.maps.places.Autocomplete(destinationField, options);
+        
+        // Add event listeners for place selection
+        currentLocationAutocomplete.addListener('place_changed', function() {
+            const place = currentLocationAutocomplete.getPlace();
+            console.log('Current location selected:', place.formatted_address);
+        });
+
+        destinationAutocomplete.addListener('place_changed', function() {
+            const place = destinationAutocomplete.getPlace();
+            console.log('Destination selected:', place.formatted_address);
+        });
+        
+        console.log("Autocomplete initialized successfully");
+    } catch (error) {
+        console.error("Autocomplete initialization error:", error);
+        showFallbackInputs();
+    }
+};
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Initialize Google Maps
-    if (!window.google) {
-        const script = document.createElement('script');
-        script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initAutocomplete`;
-        script.async = true;
-        script.defer = true;
-        document.head.appendChild(script);
-    } else {
-        initAutocomplete();
-    }
+    console.log("DOM loaded, initializing application");
+    
+    // Load Google Maps API
+    loadGoogleMapsAPI();
+    
+    // Connect WebSocket
+    connectWebSocket();
 
     // Form submission handler
     const rideForm = document.getElementById('rideForm');
     if (rideForm) {
         rideForm.addEventListener('submit', function(e) {
-            e.preventDefault(); // Prevent default form submission
-            
+            e.preventDefault();
             const currentLocation = document.getElementById('current-location').value;
             const destination = document.getElementById('destination').value;
             
@@ -1342,7 +1389,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            if (document.getElementById('fareEstimate').style.display === 'block') {
+            const fareEstimate = document.getElementById('fareEstimate');
+            if (fareEstimate && fareEstimate.style.display === 'block') {
                 bookRide(currentLocation, destination);
             } else {
                 calculateFare();
@@ -1357,438 +1405,506 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-function initAutocomplete() {
-    const currentLocationField = document.getElementById('current-location');
-    const destinationField = document.getElementById('destination');
+function loadGoogleMapsAPI() {
+    // Check if already loaded
+    if (window.google?.maps?.places) {
+        console.log("Google Maps already loaded");
+        initAutocomplete();
+        return;
+    }
+
+    // Check if script is already being loaded
+    if (document.querySelector('script[src*="maps.googleapis.com"]')) {
+        console.log("Google Maps script already loading");
+        return;
+    }
+
+    console.log("Loading Google Maps API...");
+    const script = document.createElement('script');
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initAutocomplete`;
+    script.async = true;
+    script.defer = true;
     
-    if (!currentLocationField || !destinationField) return;
-
-    const options = {
-        types: ['geocode'],
-        fields: ['formatted_address', 'geometry'],
-        componentRestrictions: {country: 'ng'}
+    script.onerror = function() {
+        console.error("Failed to load Google Maps API");
+        showFallbackInputs();
     };
+    
+    script.onload = function() {
+        console.log("Google Maps API script loaded successfully");
+    };
+    
+    document.head.appendChild(script);
+}
 
-    new google.maps.places.Autocomplete(currentLocationField, options);
-    new google.maps.places.Autocomplete(destinationField, options);
+function showFallbackInputs() {
+    console.log("Showing fallback inputs");
+    const container = document.querySelector('.location-inputs');
+    if (container) {
+        container.innerHTML = `
+            <input type="text" id="current-location" 
+                   placeholder="Enter pickup location" 
+                   class="fallback-input">
+            <input type="text" id="destination" 
+                   placeholder="Enter destination" 
+                   class="fallback-input">
+        `;
+    }
+}
 
-    // Add input listeners for fare calculation
-    currentLocationField.addEventListener('input', debounce(calculateFare, 500));
-    destinationField.addEventListener('input', debounce(calculateFare, 500));
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function() {
+        const context = this, args = arguments;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => {
+            func.apply(context, args);
+        }, wait);
+    };
+}
+
+// Error class for fare-specific errors
+class FareError extends Error {
+    constructor(message, statusCode) {
+        super(message);
+        this.statusCode = statusCode;
+        this.name = 'FareError';
+    }
+}
+
+function showErrorToast(message) {
+    const existingToasts = document.querySelectorAll('.error-toast');
+    existingToasts.forEach(toast => toast.remove());
+
+    const toast = document.createElement('div');
+    toast.className = 'error-toast';
+    toast.innerHTML = `
+        <i class="fas fa-exclamation-circle"></i>
+        <span>${message}</span>
+    `;
+    
+    document.body.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.classList.add('fade-out');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
 }
 
 // Main fare calculation function
 async function calculateFare() {
-  const pickupInput = document.getElementById('current-location');
-  const destinationInput = document.getElementById('destination');
-  
-  // Validate inputs and elements exist
-  if (!pickupInput || !destinationInput) {
-      console.error('Location input fields not found');
-      return;
-  }
+    const pickupInput = document.getElementById('current-location');
+    const destinationInput = document.getElementById('destination');
+    
+    if (!pickupInput || !destinationInput) {
+        console.error('Location inputs not found');
+        return;
+    }
 
-  const pickup = pickupInput.value;
-  const destination = destinationInput.value;
-  
-  // Validate input values
-  if (!pickup?.trim() || !destination?.trim()) {
-      hideFareEstimate();
-      return;
-  }
+    const pickup = pickupInput.value;
+    const destination = destinationInput.value;
+    
+    if (!pickup?.trim() || !destination?.trim()) {
+        hideFareEstimate();
+        return;
+    }
 
-  // UI Loading state
-  const submitBtn = document.querySelector('.submit-btn');
-  setLoadingState(submitBtn, true);
+    const submitBtn = document.querySelector('.submit-btn');
+    setLoadingState(submitBtn, true);
 
-  try {
-      const response = await fetchFareEstimate(pickup, destination);
-      const data = await processFareResponse(response);
-      updateFareDisplay(data);
-  } catch (error) {
-      handleFareError(error);
-  } finally {
-      setLoadingState(submitBtn, false);
-  }
+    try {
+        const response = await fetchFareEstimate(pickup, destination);
+        const data = await processFareResponse(response);
+        updateFareDisplay(data);
+    } catch (error) {
+        handleFareError(error);
+    } finally {
+        setLoadingState(submitBtn, false);
+    }
 }
 
-// Helper Functions
+// Fetch fare estimate from backend
 async function fetchFareEstimate(pickup, destination) {
-  const csrfToken = getCookie('csrftoken');
-  if (!csrfToken) {
-      console.warn('CSRF token not found');
-      throw new FareError('Security token missing', 403);
-  }
+    const csrfToken = getCookie('csrftoken');
+    if (!csrfToken) throw new FareError('Security token missing', 403);
 
-  const response = await fetch('/api/estimate-fare/', {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrfToken,
-          'X-Requested-With': 'XMLHttpRequest'
-      },
-      body: JSON.stringify({
-          pickup: pickup.trim(),
-          destination: destination.trim(),
-          vehicle_type: 'standard',
-          timestamp: Date.now()  // Prevent caching
-      })
-  });
-  
-  if (!response.ok) {
-      let errorData;
-      try {
-          errorData = await response.json();
-      } catch (e) {
-          throw new FareError('Invalid server response', response.status);
-      }
-      throw new FareError(
-          errorData.message || 'Failed to calculate fare', 
-          response.status
-      );
-  }
-  return response;
+    const response = await fetch('/api/estimate-fare/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken,
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        body: JSON.stringify({
+            pickup: pickup.trim(),
+            destination: destination.trim(),
+            vehicle_type: 'standard',
+            timestamp: Date.now()
+        })
+    });
+    
+    if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new FareError(
+            errorData.error || errorData.message || 'Failed to calculate fare', 
+            response.status
+        );
+    }
+    return response;
 }
 
+// Process the fare response
 async function processFareResponse(response) {
-  let data;
-  try {
-      data = await response.json();
-  } catch (e) {
-      throw new FareError('Invalid fare data format', 500);
-  }
-  
-  // Validate response structure
-  if (!data || typeof data.total_fare === 'undefined') {
-      throw new FareError('Invalid fare data received', 500);
-  }
-  
-  return {
-      total_fare: parseFloat(data.total_fare) || 0,
-      distance_km: parseFloat(data.distance_km) || 0,
-      duration_min: parseFloat(data.duration_min) || 0,
-      surge_multiplier: parseFloat(data.surge_multiplier) || 1.0
-  };
+    const data = await response.json();
+    
+    // Validate response structure
+    if (!data || 
+        typeof data.total_fare === 'undefined' ||
+        typeof data.distance_km === 'undefined' ||
+        typeof data.duration_min === 'undefined') {
+        throw new FareError('Invalid fare data received', 500);
+    }
+    
+    return {
+        total_fare: parseFloat(data.total_fare) || 0,
+        distance_km: parseFloat(data.distance_km) || 0,
+        duration_min: parseFloat(data.duration_min) || 0,
+        surge_multiplier: parseFloat(data.surge_multiplier) || 1.0
+    };
 }
 
+// Update the fare display
 function updateFareDisplay(data) {
-  const fareEstimate = document.getElementById('fareEstimate');
-  if (!fareEstimate) {
-      console.warn('Fare estimate element not found');
-      return;
-  }
+    const fareEstimate = document.getElementById('fareEstimate');
+    if (!fareEstimate) return;
 
-  // Format currency
-  const formatter = new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 2
-  });
+    // Format currency for Nigerian Naira
+    const formatter = new Intl.NumberFormat('en-NG', {
+        style: 'currency',
+        currency: 'NGN',
+        minimumFractionDigits: 2
+    });
 
-  // Safely update display elements
-  const fareAmountEl = document.getElementById('fareAmount');
-  const distanceTextEl = document.getElementById('distanceText');
-  const durationTextEl = document.getElementById('durationText');
-  const surgeMultiplierEl = document.getElementById('surgeMultiplier');
-  const surgeNoticeEl = document.getElementById('surgeNotice');
+    // Update fare information
+    const fareAmountEl = document.getElementById('fareAmount');
+    const distanceTextEl = document.getElementById('distanceText');
+    const durationTextEl = document.getElementById('durationText');
+    
+    if (fareAmountEl) fareAmountEl.textContent = formatter.format(data.total_fare);
+    if (distanceTextEl) distanceTextEl.textContent = `${data.distance_km.toFixed(1)} km`;
+    if (durationTextEl) durationTextEl.textContent = `${Math.round(data.duration_min)} mins`;
 
-  if (fareAmountEl) fareAmountEl.textContent = formatter.format(data.total_fare);
-  if (distanceTextEl) distanceTextEl.textContent = `${data.distance_km.toFixed(1)} km`;
-  if (durationTextEl) durationTextEl.textContent = `${Math.round(data.duration_min)} mins`;
+    // Handle surge pricing display
+    const surgeNoticeEl = document.getElementById('surgeNotice');
+    if (data.surge_multiplier > 1 && surgeNoticeEl) {
+        const surgeMultiplierEl = document.getElementById('surgeMultiplier');
+        if (surgeMultiplierEl) surgeMultiplierEl.textContent = data.surge_multiplier.toFixed(1);
+        surgeNoticeEl.style.display = 'block';
+    } else if (surgeNoticeEl) {
+        surgeNoticeEl.style.display = 'none';
+    }
 
-  // Handle surge pricing
-  if (surgeNoticeEl) {
-      if (data.surge_multiplier > 1) {
-          if (surgeMultiplierEl) surgeMultiplierEl.textContent = data.surge_multiplier.toFixed(1);
-          surgeNoticeEl.style.display = 'block';
-      } else {
-          surgeNoticeEl.style.display = 'none';
-      }
-  }
-
-  // Show fare estimate
-  fareEstimate.style.display = 'block';
+    fareEstimate.style.display = 'block';
 }
 
+// Error handling
 function handleFareError(error) {
-  console.error('Fare Error:', error);
-  
-  let errorMessage = 'Error calculating fare. Please try again.';
-  if (error instanceof FareError) {
-      errorMessage = error.message;
-      
-      // Specific handling for different status codes
-      if (error.status === 400) {
-          errorMessage = 'Please check your locations and try again.';
-      } else if (error.status === 429) {
-          errorMessage = 'Too many requests. Please wait a moment.';
-      } else if (error.status === 403) {
-          errorMessage = 'Session expired. Please refresh the page.';
-      }
-  }
-  
-  showErrorToast(errorMessage);
-  hideFareEstimate();
-}
-
-function hideFareEstimate() {
-  const fareEstimate = document.getElementById('fareEstimate');
-  if (fareEstimate) {
-      fareEstimate.style.display = 'none';
-  }
-}
-
-function setLoadingState(button, isLoading) {
-  if (!button) return;
-  
-  button.disabled = isLoading;
-  button.innerHTML = isLoading 
-      ? '<i class="fas fa-spinner fa-spin"></i> Calculating...'
-      : '<i class="fas fa-paper-plane"></i> Book a Ride';
-}
-
-// Error Toast Display
-function showErrorToast(message) {
-  // Remove existing toasts
-  document.querySelectorAll('.error-toast').forEach(el => el.remove());
-  
-  const toast = document.createElement('div');
-  toast.className = 'error-toast';
-  toast.innerHTML = `
-      <i class="fas fa-exclamation-circle"></i>
-      <span>${message}</span>
-  `;
-  
-  document.body.appendChild(toast);
-  
-  // Auto-remove after delay
-  setTimeout(() => {
-      toast.classList.add('fade-out');
-      setTimeout(() => toast.remove(), 300);
-  }, 5000);
-}
-
-// Custom Error Class
-class FareError extends Error {
-  constructor(message, status) {
-      super(message);
-      this.name = 'FareError';
-      this.status = status;
-  }
+    console.error('Fare calculation error:', error);
+    hideFareEstimate();
+    
+    // Show error to user
+    const errorMessage = error instanceof FareError 
+        ? error.message
+        : 'Failed to calculate fare. Please try again.';
+    
+    showErrorToast(errorMessage);
 }
 
 async function bookRide(currentLocation, destination) {
-  const submitBtn = document.querySelector('.submit-btn');
-  if (!submitBtn) return;
+    console.log('[BOOK RIDE] Starting ride booking process');
+    console.log('[BOOK RIDE] Pickup:', currentLocation);
+    console.log('[BOOK RIDE] Destination:', destination);
+    
+    const submitBtn = document.querySelector('.submit-btn');
+    if (!submitBtn) {
+        console.error('Submit button not found');
+        return;
+    }
 
-  // Set loading state
-  submitBtn.disabled = true;
-  submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
+    // Validate inputs
+    if (!currentLocation?.trim() || !destination?.trim()) {
+        showErrorToast('Please enter both pickup and destination locations');
+        return;
+    }
 
-  try {
-      const response = await fetch('/request_ride/', {
-          method: 'POST',
-          headers: {
-              'Content-Type': 'application/x-www-form-urlencoded',
-              'X-CSRFToken': getCookie('csrftoken')
-          },
-          body: new URLSearchParams({
-              'current_location': currentLocation,
-              'destination': destination
-          })
-      });
+    // Set loading state
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Booking...';
 
-      if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error || 'Failed to book ride');
-      }
+    try {
+        const csrfToken = getCookie('csrftoken');
+        if (!csrfToken) {
+            throw new Error('Security token missing. Please refresh the page.');
+        }
 
-      const data = await response.json();
-      if (!data.ride_id) throw new Error('Missing ride ID');
-      
-      startRideTracking(data.ride_id);
-  } catch (error) {
-      console.error('Booking error:', error);
-      showErrorToast(`Error: ${error.message}`);
-  } finally {
-      submitBtn.disabled = false;
-      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Book a Ride';
-  }
+        const response = await fetch('/request_ride/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken,
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                current_location: currentLocation.trim(),
+                destination: destination.trim(),
+                timestamp: Date.now()
+            })
+        });
+
+        // Handle HTTP errors
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(
+                errorData.error || 
+                errorData.message || 
+                `Booking failed (Status: ${response.status})`
+            );
+        }
+
+        const data = await response.json();
+        
+        // Validate response structure
+        if (!data.ride_id) {
+            throw new Error('Invalid response from server: Missing ride ID');
+        }
+        
+        console.log('[BOOK RIDE] Success! Ride ID:', data.ride_id);
+        console.log('[BOOK RIDE] Initiating ride tracking...');
+
+        // Start tracking the ride
+        startRideTracking(data.ride_id);
+        
+    } catch (error) {
+        console.error('Booking error:', error);
+        
+        // Show user-friendly error messages
+        const errorMessage = error.message.includes('Failed to fetch') 
+            ? 'Network error. Please check your connection.'
+            : error.message;
+            
+        showErrorToast(errorMessage);
+        
+    } finally {
+        // Reset button state
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Book a Ride';
+    }
 }
 
 function startRideTracking(rideId) {
-  currentRideId = rideId;
-  
-  // Safely get DOM elements
-  const rideForm = document.getElementById('rideForm');
-  const trackingCard = document.getElementById('rideTrackingCard');
-  const trackingCodeElement = document.getElementById('trackingCode');
-  const searchingState = document.getElementById('searchingState');
-  const assignedState = document.getElementById('driverAssignedState');
+    console.log('[RIDE TRACKING] Starting ride tracking for ride ID:', rideId);
+    currentRideId = rideId;
 
-  // Hide form and show tracking card if elements exist
-  if (rideForm) rideForm.style.display = 'none';
-  if (trackingCard) trackingCard.style.display = 'block';
-  
-  // Generate and display tracking code
-  if (trackingCodeElement) {
-      const trackingCode = Math.random().toString(36).substring(2, 6).toUpperCase();
-      trackingCodeElement.textContent = trackingCode;
-  }
-  
-  // Show searching state
-  if (searchingState) searchingState.style.display = 'block';
-  if (assignedState) assignedState.style.display = 'none';
-  
-  // Start polling for ride status
-  checkRideStatus();
-  clearInterval(rideStatusInterval); // Clear any existing interval
-  rideStatusInterval = setInterval(checkRideStatus, 3000);
+    // Safely get all elements
+    const rideForm = document.getElementById('rideForm');
+    const trackingCard = document.getElementById('rideTrackingCard');
+    const trackingCodeElement = document.getElementById('trackingCode');
+    const searchingState = document.getElementById('searchingState');
+    const assignedState = document.getElementById('driverAssignedState');
+    
+    // Check elements exist before using them
+    if (!rideForm || !trackingCard || !searchingState || !assignedState) {
+        console.error("Missing required elements in DOM");
+        showErrorToast("Error initializing ride tracking");
+        return;
+    }
+    
+    // Update UI
+    console.log('[RIDE TRACKING] Updating UI for new ride');
+    rideForm.style.display = 'none';
+    trackingCard.style.display = 'block';
+    
+    if (trackingCodeElement) {
+        trackingCodeElement.textContent = Math.random().toString(36).substring(2, 6).toUpperCase();
+    }
+    
+    searchingState.style.display = 'block';
+    assignedState.style.display = 'none';
+    console.log('[RIDE TRACKING] UI updated - showing searching state');
+    
+    // Start tracking
+    console.log('[RIDE TRACKING] Subscribing to ride updates');
+    subscribeToRide(rideId);
+    checkRideStatus();
+    clearInterval(rideStatusInterval);
+    rideStatusInterval = setInterval(checkRideStatus, 3000);
+    console.log('[RIDE TRACKING] Started status polling interval');
 }
 
 async function checkRideStatus() {
-  if (!currentRideId) return;
+    console.log('[STATUS CHECK] Checking status for ride:', currentRideId);
+    if (!currentRideId) {
+        console.warn('[STATUS CHECK] No current ride ID');
+        return;
+    } 
 
-  try {
-      const response = await fetch(`/ride-status/${currentRideId}/`);
-      if (!response.ok) throw new Error('Failed to check status');
-      
-      const data = await response.json();
-      updateRideStatusUI(data);
-      
-      // Stop polling if ride is completed/cancelled
-      if (['completed', 'cancelled'].includes(data.status)) {
-          clearInterval(rideStatusInterval);
-      }
-  } catch (error) {
-      console.error('Status check error:', error);
-      // Don't stop polling on error - retry next interval
-  }
+    try {
+        console.log('[STATUS CHECK] Making API request to /ride-status/' + currentRideId + '/');
+        const response = await fetch(`/ride-status/${currentRideId}/`);
+        
+        if (!response.ok) {
+            console.error('[STATUS CHECK] API request failed with status:', response.status);
+            throw new Error('Failed to check status');
+        } 
+        
+        const data = await response.json();
+        updateRideStatusUI(data);
+        
+        if (['completed', 'cancelled'].includes(data.status)) {
+            clearInterval(rideStatusInterval);
+        }
+    } catch (error) {
+        console.error('Status check error:', error);
+    }
 }
 
 function updateRideStatusUI(data) {
-  const status = data.status.toLowerCase();
-  const statusElement = document.getElementById('trackingStatus');
-  const searchingState = document.getElementById('searchingState');
-  const assignedState = document.getElementById('driverAssignedState');
-  const cancelButton = document.getElementById('cancelRideBtn');
-  
-  if (!statusElement || !searchingState || !assignedState || !cancelButton) return;
+    const statusElement = document.getElementById('trackingStatus');
+    const searchingState = document.getElementById('searchingState');
+    const assignedState = document.getElementById('driverAssignedState');
+    const cancelButton = document.getElementById('cancelRideBtn');
+    
+    if (!statusElement || !searchingState || !assignedState || !cancelButton) return;
 
-  switch(data.status) {
-      case 'pending':
-          statusElement.textContent = "Finding you a driver";
-          searchingState.style.display = 'block';
-          assignedState.style.display = 'none';
-          cancelButton.style.display = 'block';
-          break;
-          
-      case 'accepted':
+    switch(data.status) {
+        case 'pending':
+            statusElement.textContent = "Finding you a driver";
+            searchingState.style.display = 'block';
+            assignedState.style.display = 'none';
+            cancelButton.style.display = 'block';
+            break;
+            
+        case 'accepted':
             statusElement.textContent = "Driver is on the way!";
             searchingState.style.display = 'none';
             assignedState.style.display = 'block';
-            cancelButton.style.display = 'block';
-
             
             if (data.driver) {
-              updateDriverInfo(data.driver);
-          } else {
-              
-              document.getElementById('driverName').textContent = "Driver assigned";
-              document.getElementById('vehicleInfo').textContent = "Getting details...";
-          }
+                const driverNameEl = document.getElementById('driverName');
+                const vehicleInfoEl = document.getElementById('vehicleInfo');
+                
+                if (driverNameEl) {
+                    driverNameEl.textContent = data.driver.name || "Driver assigned";
+                }
+                
+                if (vehicleInfoEl) {
+                    const vehicleParts = [
+                        data.driver.car_model,
+                        data.driver.license_plate
+                    ].filter(part => part && part !== 'N/A' && part !== 'Unknown');
+                    
+                    vehicleInfoEl.textContent = vehicleParts.join(' • ') || "Vehicle details coming soon";
+                }
+                
+                if (data.driver.rating) {
+                    updateStarRating(data.driver.rating);
+                }
+            } else {
+                const driverNameEl = document.getElementById('driverName');
+                const vehicleInfoEl = document.getElementById('vehicleInfo');
+                if (driverNameEl) driverNameEl.textContent = "Driver assigned";
+                if (vehicleInfoEl) vehicleInfoEl.textContent = "Getting details...";
+            }
+            
+            const estimatedArrivalEl = document.getElementById('estimatedArrival');
+            if (estimatedArrivalEl) {
+                estimatedArrivalEl.textContent = data.eta ? `ETA: ${data.eta} min` : "Arrival time coming soon";
+            }
+            break;
+            
+        case 'started':
+            statusElement.textContent = "Trip in progress";
+            statusElement.style.color = "";
+            const estimatedArrivalEl2 = document.getElementById('estimatedArrival');
+            if (estimatedArrivalEl2) estimatedArrivalEl2.textContent = "En route to destination";
+            break;
+            
+        case 'completed':
+            statusElement.textContent = "Trip completed!";
+            statusElement.style.color = "green";
+            cancelButton.style.display = 'none';
+            if (data.fare) {
+                const estimatedArrivalEl3 = document.getElementById('estimatedArrival');
+                if (estimatedArrivalEl3) {
+                    estimatedArrivalEl3.textContent = `Fare: ₦${data.fare.toFixed(2)}`;
+                }
+            }
+            break;
+            
+        case 'cancelled':
+            statusElement.textContent = "Trip cancelled";
+            statusElement.style.color = "red";
+            cancelButton.style.display = 'none';
+            break;
+    }
+}
 
-          
-          const etaElement = document.getElementById('estimatedArrival');
-          const distanceElement = document.getElementById('driverDistance');
-          
-          if (data.eta) {
-              etaElement.textContent = `${data.eta} min`;
-          } else {
-              etaElement.textContent = "Calculating...";
-          }
-          
-          if (data.distance) {
-              distanceElement.textContent = `${data.distance} km`;
-          } else {
-              distanceElement.textContent = "--";
-          }
-          break;
-
-          
-      case 'started':
-          statusElement.textContent = "Trip in progress";
-          statusElement.style.color = "";
-          const estimatedArrival = document.getElementById('estimatedArrival');
-          if (estimatedArrival) estimatedArrival.textContent = "En route to destination";
-          break;
-          
-      case 'completed':
-          statusElement.textContent = "Trip completed!";
-          statusElement.style.color = "green";
-          if (cancelButton) cancelButton.style.display = 'none';
-          const fareElement = document.getElementById('estimatedArrival');
-          if (fareElement && data.fare) fareElement.textContent = `Fare: ₦${data.fare.toFixed(2)}`;
-          break;
-          
-      case 'cancelled':
-          statusElement.textContent = "Trip cancelled";
-          statusElement.style.color = "red";
-          if (cancelButton) cancelButton.style.display = 'none';
-          break;
-  }
+function updateStarRating(rating) {
+    const ratingElement = document.querySelector('.driver-rating');
+    if (ratingElement && rating) {
+        ratingElement.innerHTML = '';
+        const fullStars = Math.floor(rating);
+        const hasHalfStar = rating % 1 >= 0.5;
+        
+        for (let i = 0; i < 5; i++) {
+            const star = document.createElement('i');
+            if (i < fullStars) {
+                star.className = 'fas fa-star';
+            } else if (i === fullStars && hasHalfStar) {
+                star.className = 'fas fa-star-half-alt';
+            } else {
+                star.className = 'far fa-star';
+            }
+            ratingElement.appendChild(star);
+        }
+    }
 }
 
 async function cancelRide() {
-  if (!currentRideId || !confirm('Are you sure you want to cancel this ride?')) return;
-  
-  const cancelButton = document.getElementById('cancelRideBtn');
-  if (cancelButton) cancelButton.disabled = true;
-  
-  try {
-      const response = await fetch(`/cancel-ride/${currentRideId}/`, {
-          method: 'POST',
-          headers: {
-              'X-CSRFToken': getCookie('csrftoken')
-          }
-      });
-      
-      if (response.ok) {
-          clearInterval(rideStatusInterval);
-          updateRideStatusUI({ status: 'cancelled' });
-      } else {
-          throw new Error('Failed to cancel ride');
-      }
-  } catch (error) {
-      console.error('Cancel error:', error);
-      showErrorToast('Failed to cancel ride. Please try again.');
-  } finally {
-      const cancelButton = document.getElementById('cancelRideBtn');
-      if (cancelButton) cancelButton.disabled = false;
-  }
-}
-
-
-function showErrorToast(message) {
-  // Remove existing toasts
-  const existingToasts = document.querySelectorAll('.error-toast');
-  existingToasts.forEach(toast => toast.remove());
-  
-  // Create new toast
-  const toast = document.createElement('div');
-  toast.className = 'error-toast';
-  toast.innerHTML = `
-      <i class="fas fa-exclamation-circle"></i>
-      <span>${message}</span>
-  `;
-  
-  document.body.appendChild(toast);
-  
-  // Auto-remove after delay
-  setTimeout(() => {
-      toast.classList.add('fade-out');
-      setTimeout(() => toast.remove(), 300);
-  }, 5000);
+    if (!currentRideId || !confirm('Are you sure you want to cancel this ride?')) return;
+    
+    const cancelButton = document.getElementById('cancelRideBtn');
+    if (cancelButton) cancelButton.disabled = true;
+    
+    try {
+        const response = await fetch(`/cancel-ride/${currentRideId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+        
+        if (response.ok) {
+            clearInterval(rideStatusInterval);
+            updateRideStatusUI({ status: 'cancelled' });
+            
+            if (rideSocket && rideSocket.readyState === WebSocket.OPEN) {
+                rideSocket.send(JSON.stringify({
+                    action: 'unsubscribe',
+                    ride_id: currentRideId
+                }));
+            }
+        } else {
+            throw new Error('Failed to cancel ride');
+        }
+    } catch (error) {
+        console.error('Cancel error:', error);
+        showErrorToast('Failed to cancel ride. Please try again.');
+    } finally {
+        const cancelButton = document.getElementById('cancelRideBtn');
+        if (cancelButton) cancelButton.disabled = false;
+    }
 }
 
 function getCookie(name) {

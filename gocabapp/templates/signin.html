@@ -261,3 +261,207 @@
 </body>
 
 </html>
+
+
+
+
+<style>
+  /* Main Products Section */
+  .industrial-products-section {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 60px 20px;
+    text-align: center;
+  }
+  
+  .industrial-title {
+    font-size: 42px;
+    color: #222;
+    margin-bottom: 60px;
+    font-weight: 700;
+    position: relative;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .industrial-title:after {
+    content: '';
+    position: absolute;
+    width: 80px;
+    height: 4px;
+    background: #e74c3c;
+    bottom: -15px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  
+  /* Products Grid Layout */
+  .industrial-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 5px;
+    margin-top: 40px;
+  }
+  
+  /* Product Category Cards */
+  .industrial-category {
+    position: relative;
+    height: 250px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background-size: cover;
+    background-position: center;
+  }
+  
+  .industrial-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+  }
+  
+  .industrial-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 30px;
+    z-index: 2;
+    text-align: left;
+  }
+  
+  .industrial-content h3 {
+    color: white;
+    font-size: 22px;
+    font-weight: 600;
+    margin: 0;
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    line-height: 1.3;
+  }
+  
+  /* Special Service Card */
+  .service-card {
+    background-color: #03553c !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .service-card .industrial-content {
+    text-align: center;
+    padding: 20px;
+  }
+  
+  .service-card h3 {
+    font-size: 28px;
+    text-shadow: none;
+  }
+  
+  /* Hover Effects */
+  .industrial-category:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+  }
+  
+  .industrial-category:hover .industrial-overlay {
+    background: rgba(0,0,0,0.4);
+  }
+  
+  /* Responsive Adjustments */
+  @media (max-width: 1200px) {
+    .industrial-grid {
+      gap: 25px;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .industrial-grid {
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    
+    .industrial-category {
+      height: 200px;
+    }
+    
+    .industrial-content {
+      padding: 20px;
+    }
+    
+    .industrial-content h3 {
+      font-size: 18px;
+    }
+    
+    .service-card h3 {
+      font-size: 22px;
+    }
+    
+    .industrial-title {
+      font-size: 32px;
+      margin-bottom: 40px;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    .industrial-grid {
+      grid-template-columns: 1fr;
+      gap: 15px;
+    }
+    
+    .industrial-category {
+      height: 180px;
+    }
+  }
+  </style>
+  
+  <div class="industrial-products-section">
+    <div class="industrial-grid">
+      <!-- Service Card (Modified) -->
+      <div class="industrial-category service-card">
+        <div class="industrial-overlay"></div>
+        <div class="industrial-content">
+          <h3>Our Services</h3>
+        </div>
+      </div>
+      
+      <!-- Original Cards (Unchanged) -->
+      <div class="industrial-category" style="background-image: url('https://idn.eeu.temporary.site/website_071db5f1/wp-content/uploads/2025/07/kkoaolw.webp')">
+        <div class="industrial-overlay"></div>
+        <div class="industrial-content">
+          <h3>Power as Service</h3>
+        </div>
+      </div>
+      
+      <div class="industrial-category" style="background-image: url('https://idn.eeu.temporary.site/website_071db5f1/wp-content/uploads/2025/07/ppwlwa.webp')">
+        <div class="industrial-overlay"></div>
+        <div class="industrial-content">
+          <h3>Renweable Energy</h3>
+        </div>
+      </div>
+      
+      <div class="industrial-category" style="background-image: url('https://idn.eeu.temporary.site/website_071db5f1/wp-content/uploads/2025/07/iiwowoka.png')">
+        <div class="industrial-overlay"></div>
+        <div class="industrial-content">
+          <h3>Generator & Transformers</h3>
+        </div>
+      </div>
+      
+      <div class="industrial-category" style="background-image: url('https://idn.eeu.temporary.site/website_071db5f1/wp-content/uploads/2025/07/kkkslsls.webp')">
+        <div class="industrial-overlay"></div>
+        <div class="industrial-content">
+          <h3>Service as Maintenance</h3>
+        </div>
+      </div>
+      
+      <div class="industrial-category" style="background-image: url('https://idn.eeu.temporary.site/website_071db5f1/wp-content/uploads/2025/07/Untitled_design_a_papepe-removebg-preview.webp')">
+        <div class="industrial-overlay"></div>
+        <div class="industrial-content">
+          <h3>Consulting</h3>
+        </div>
+      </div>
+    </div>
+  </div>

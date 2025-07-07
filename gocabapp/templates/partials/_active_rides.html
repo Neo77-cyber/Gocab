@@ -1,0 +1,56 @@
+{% for ride in active_rides %}
+<div class="trip-card active" data-ride-id="{{ ride.id }}">
+    <div class="trip-header">
+        <div class="trip-meta">
+            <span class="trip-time">Started {{ ride.started_at|timesince }} ago</span>
+            <span class="trip-distance">{{ ride.distance_km|floatformat:1 }} km</span>
+        </div>
+        <div class="trip-price">₦{{ ride.total_fare|floatformat:2 }}</div>
+    </div>
+    
+    <div class="trip-progress">
+        <div class="progress-bar">
+            <div class="progress" style="width: {% widthratio ride.distance_traveled ride.distance_km 100 %}%"></div>
+        </div>
+        <div class="progress-labels">
+            <span>Pickup</span>
+            <span>Destination</span>
+        </div>
+    </div>
+    
+    <div class="trip-footer">
+        <div class="passenger-info">
+            <div class="passenger-avatar">
+                {{ ride.passenger.first_name|first }}{{ ride.passenger.last_name|first }}
+            </div>
+            <div class="passenger-details">
+                <div class="passenger-name">{{ ride.passenger.get_full_name }}</div>
+                <div class="passenger-location">
+                    <i class="fas fa-map-marker-alt"></i> {{ ride.current_location }}
+                </div>
+            </div>
+        </div>
+        <div class="trip-actions">
+            <form method="post" action="{% url 'complete_trip' ride.id %}" class="inline-form">
+                {% csrf_token %}
+                <button type="submit" class="complete-btn">
+                    <i class="fas fa-flag-checkered"></i> Complete
+                </button>
+            </form>
+            <button class="navigate-btn" data-lat="{{ ride.dropoff_latitude }}" data-lng="{{ ride.dropoff_longitude }}">
+                <i class="fas fa-directions"></i> Navigate
+            </button>
+        </div>
+    </div>
+    
+    <div class="trip-timer">
+        <i class="fas fa-stopwatch"></i>
+        <span>Trip duration: {{ ride.started_at|timesince }}</span>
+    </div>
+</div>
+{% empty %}
+<div class="empty-state">
+    <i class="fas fa-road"></i>
+    <p>No active trips</p>
+</div>
+{% endfor %}

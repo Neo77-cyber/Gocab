@@ -16,6 +16,12 @@ from .services import get_google_distance, calculate_ride_fare
 from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.template.loader import render_to_string
+from .encoders import DjangoSafeJSONEncoder
 
 
 logger = logging.getLogger(__name__)
@@ -23,104 +29,163 @@ logger = logging.getLogger(__name__)
 
 
 
-#RIDER
-
-@login_required(login_url='home')
-def rider_dashboard(request):
-    return render (request, 'rider-dashboard.html')
-
-@login_required
-def request_ride(request):
-    if request.method == 'POST':
-        try:
-            current_location = request.POST.get('current_location')
-            destination = request.POST.get('destination')
-
-            if not current_location or not destination:
-                return JsonResponse(
-                    {'error': 'Both locations are required'}, 
-                    status=400
-                )    
-            distance_km, duration_min = get_google_distance(current_location, destination)
-            
-            if not distance_km:
-                return JsonResponse(
-                    {'error': 'Could not calculate route. Please check locations.'},
-                    status=400
-                )       
-            fare = calculate_ride_fare(distance_km, duration_min)
-                  
-            ride = RideRequest.objects.create(
-                passenger=request.user,
-                current_location=current_location,
-                destination=destination,
-                distance_km=distance_km,
-                duration_min=duration_min,
-                base_fare=fare['base_fare'],
-                distance_fare=fare['distance_fare'],
-                time_fare=fare['time_fare'],
-                total_fare=fare['total_fare'],
-                surge_multiplier=fare['surge_multiplier'],
-                status='pending'
+@receiver(post_save, sender=RideRequest)
+def ride_request_update(sender, instance, created, **kwargs):
+    if not created:
+        channel_layer = get_channel_layer()
+        
+        # Send to passenger
+        if instance.status == 'accepted':
+            async_to_sync(channel_layer.group_send)(
+                f"ride_updates_{instance.passenger.id}",
+                {
+                    'type': 'ride_update',
+                    'event': 'accepted',
+                    'ride_id': instance.id,
+                    'driver': {
+                        'name': instance.driver.get_full_name() or instance.driver.username,
+                        'rating': instance.driver.driver.rating if hasattr(instance.driver, 'driver') else 4.5,
+                        'car_model': instance.driver.driver.vehicle_model if hasattr(instance.driver, 'driver') else 'Unknown',
+                        'license_plate': instance.driver.driver.license_plate if hasattr(instance.driver, 'driver') else 'N/A',
+                    },
+                    'eta': max(5, int(instance.distance_km * 2)) if instance.distance_km else 10,
+                    'distance': f"{instance.distance_km:.1f} km" if instance.distance_km else None,
+                    'fare': instance.total_fare
+                }
+            )
+        elif instance.status in ['started', 'completed', 'cancelled']:
+            async_to_sync(channel_layer.group_send)(
+                f"ride_updates_{instance.passenger.id}",
+                {
+                    'type': 'ride_update',
+                    'event': instance.status,
+                    'ride_id': instance.id,
+                    'message': f'Ride {instance.status}'
+                }
             )
 
-            return JsonResponse({
-                'status': 'success',
-                'ride_id': ride.id,
-                'message': 'Ride booked successfully',
-                'fare': {
-                    'total': fare['total_fare'],
-                    'base': fare['base_fare'],
-                    'distance': fare['distance_fare'],
-                    'time': fare['time_fare'],
-                    'surge': fare['surge_multiplier']
-                },
-                'distance': distance_km,
-                'duration': duration_min
-            })
-
-        except Exception as e:
-            logger.error(f"Error in request_ride: {str(e)}", exc_info=True)
-            return JsonResponse(
-                {'error': 'Internal server error: ' + str(e)},
-                status=500
+        # Send to driver
+        if instance.driver and instance.status in ['cancelled']:
+            async_to_sync(channel_layer.group_send)(
+                f"driver_updates_{instance.driver.id}",
+                {
+                    'type': 'driver_update',
+                    'event': instance.status,
+                    'ride_id': instance.id,
+                    'message': f'Ride {instance.status} by passenger'
+                }
             )
-
-    return JsonResponse(
-        {'error': 'Invalid request method'},
-        status=405
-    )
-                
 
 @login_required
 def ride_status(request, ride_id):
-    ride = get_object_or_404(RideRequest, id=ride_id, passenger=request.user)
-    
-    response_data = {
-        'status': ride.status,
-        'driver': None,
-        'eta': None,
-        'distance': None
-    }
-    print(response_data)
-    
-    if ride.driver:
+    try:
+        ride = get_object_or_404(RideRequest, id=ride_id, passenger=request.user)
         
-        if ride.status == 'accepted':
+        # Basic timestamp handling
+        last_updated = ride.requested_at.isoformat()
+        
+        driver_info = None
+        if ride.driver and hasattr(ride.driver, 'driver'):
+            driver_info = {
+                'name': ride.driver.get_full_name() or ride.driver.username,
+                'car_model': ride.driver.driver.vehicle_model or 'Unknown',
+                'license_plate': ride.driver.driver.license_plate or 'N/A'
+            }
+        
+        # Minimal response without any decimal fields
+        response_data = {
+            'status': ride.status,
+            'ride_id': ride.id,
+            'driver': driver_info,
+            'current_location': ride.current_location,
+            'destination': ride.destination,
+            'last_updated': last_updated
+        }
+        
+        return JsonResponse(response_data)
+        
+    except Exception as e:
+        logger.error(f"Error in ride_status: {str(e)}")
+        return JsonResponse({
+            'error': 'Could not fetch ride status',
+            'details': str(e)
+        }, status=500)
 
-            eta_minutes = max(5, int(ride.distance_km * 2))  
-            response_data.update({
-                'driver': {
-                    'name': ride.driver.get_full_name() or ride.driver.username,
-                    'rating': ride.driver.driver.rating if hasattr(ride.driver, 'driver') else 4.5,
-                    'car_model': ride.driver.driver.vehicle_model if hasattr(ride.driver, 'driver') else 'Unknown',
-                    'license_plate': ride.driver.driver.license_plate if hasattr(ride.driver, 'driver') else 'N/A',
-                },
-                'eta': eta_minutes,
-                'distance': f"{ride.distance_km:.1f} km" if ride.distance_km else None
-            })
+# Rider Views
+@login_required(login_url='home')
+def rider_dashboard(request):
+    active_ride = RideRequest.objects.filter(
+        passenger=request.user,
+        status__in=['pending', 'accepted', 'started']
+    ).order_by('-requested_at').first()
     
-    return JsonResponse(response_data)
+    context = {
+        'active_ride': active_ride,
+        'is_rider': True
+    }
+    return render(request, 'rider-dashboard.html', context)
+
+@csrf_exempt
+@login_required
+def request_ride(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST allowed'}, status=405)
+    
+    try:
+        if request.content_type == 'application/json':
+                data = json.loads(request.body)
+        else:
+                data = request.POST
+        current_location = data.get('current_location')
+        destination = data.get('destination')
+        
+        if not current_location or not destination:
+            return JsonResponse({'error': 'Both locations required'}, status=400)
+        
+        # Calculate distance and fare
+        distance_km, duration_min = get_google_distance(current_location, destination)
+        if not distance_km:
+            return JsonResponse({'error': 'Could not calculate route'}, status=400)
+            
+        fare = calculate_ride_fare(distance_km, duration_min)
+        
+        # Create ride
+        ride = RideRequest.objects.create(
+            passenger=request.user,
+            current_location=current_location,
+            destination=destination,
+            distance_km=distance_km,
+            duration_min=duration_min,
+            total_fare=fare['total_fare'],
+            status='pending'
+        )
+        
+        # Notify drivers
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            "available_drivers",
+            {
+                'type': 'driver_update',
+                'event': 'new_ride',
+                'ride_id': ride.id,
+                'pickup': ride.current_location,
+                'destination': ride.destination,
+                'fare': ride.total_fare
+            }
+        )
+        
+        
+        return JsonResponse({
+            'status': 'success',
+            'ride_id': ride.id,
+            'fare': ride.total_fare,
+            'distance': distance_km,
+            'duration': duration_min
+        })
+        
+    except Exception as e:
+        logger.error(f"Ride request error: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
 
 @login_required
 def cancel_ride(request, ride_id):
@@ -131,70 +196,211 @@ def cancel_ride(request, ride_id):
         ride.cancelled_at = timezone.now()
         ride.save()
         
+        # Notify driver if ride was accepted
+        if ride.driver:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"driver_updates_{ride.driver.id}",
+                {
+                    'type': 'driver_update',
+                    'event': 'ride_cancelled',
+                    'ride_id': ride.id,
+                    'message': 'Passenger cancelled the ride'
+                }
+            )
+        
         return JsonResponse({'status': 'success'})
     
     return JsonResponse({'status': 'already_ended'}, status=400)
 
-#DRIVER
-
+# Driver Views
 @login_required(login_url='home')
 def driver_dashboard(request):
     if not hasattr(request.user, 'driver'):
-        messages.error(request, "You must be a registered driver to view this page.")
         return redirect('home')
 
+    # Get active ride if exists
+    active_ride = RideRequest.objects.filter(
+        driver=request.user,
+        status__in=['accepted', 'started']
+    ).order_by('-accepted_at').first()
+    
+    # Get available rides if no active ride
+    available_rides = None
+    if not active_ride:
+        available_rides = RideRequest.objects.filter(
+            status='pending',
+            driver__isnull=True
+        ).order_by('-requested_at')
+    
     context = {
-        'new_requests': RideRequest.objects.filter(status='pending', driver__isnull=True).count(),
-        'active_trips': RideRequest.objects.filter(driver=request.user, status='started').count(),
-        'completed_trips': RideRequest.objects.filter(driver=request.user, status='completed').count(),
-        'pending_rides': RideRequest.objects.filter(status='pending', driver__isnull=True).order_by('-requested_at'),
-        'accepted_rides': RideRequest.objects.filter(driver=request.user, status='accepted').order_by('-accepted_at'),
-        'active_rides': RideRequest.objects.filter(driver=request.user, status='started').order_by('-started_at'),
-        'completed_rides': RideRequest.objects.filter(driver=request.user, status='completed').order_by('-completed_at')
+        'active_ride': active_ride,
+        'available_rides': available_rides,
+        'is_driver': True
     }
     return render(request, 'driver-dashboard.html', context)
 
 @login_required
+def pending_rides(request):
+    rides = RideRequest.objects.filter(
+        status='pending',
+        driver__isnull=True
+    ).order_by('-requested_at')[:20]
+    
+    html = render_to_string('partials/_pending_rides.html', {
+        'pending_rides': rides,
+        'request': request
+    })
+    return JsonResponse({'html': html})
+
+@login_required
+def accepted_rides(request):
+    rides = RideRequest.objects.filter(
+        driver=request.user,
+        status='accepted'
+    ).order_by('-accepted_at')
+    
+    html = render_to_string('partials/_accepted_rides.html', {
+        'accepted_rides': rides,
+        'request': request
+    })
+    return JsonResponse({'html': html})
+
+@login_required
+def active_rides(request):
+    rides = RideRequest.objects.filter(
+        driver=request.user,
+        status='started'
+    ).order_by('-started_at')
+    
+    html = render_to_string('partials/_active_rides.html', {
+        'active_rides': rides,
+        'request': request
+    })
+    return JsonResponse({'html': html})
+
+
+@csrf_exempt
 def accept_ride(request, ride_id):
-    ride = get_object_or_404(RideRequest, id=ride_id, status='pending', driver__isnull=True)
-    ride.driver = request.user
-    ride.status = 'accepted'
-    ride.accepted_at = timezone.now()
-    ride.save()
-    messages.success(request, f"Ride accepted! Please proceed to pickup at {ride.current_location}")
-    return redirect('driver_dashboard')
+    if request.method == 'POST':
+        try:
+            ride = RideRequest.objects.get(id=ride_id, status='pending')
+            ride.driver = request.user
+            ride.status = 'accepted'
+            ride.save()
+
+            # Prepare ride data for broadcast
+            ride_data = {
+                'id': ride.id,
+                'fare': ride.total_fare,
+                'status': ride.status,
+                'pickup': ride.current_location,
+                'dropoff': ride.destination,
+                'distance_km': float(ride.distance_km),  
+                'duration_min': float(ride.duration_min), 
+                'fare': float(ride.total_fare),
+                'passenger': ride.passenger.username,
+                'requested_at': ride.requested_at,
+            }
+
+            # Serialize safely before sending to channel layer
+            ride_payload = json.loads(json.dumps(ride_data, cls=DjangoSafeJSONEncoder))
+
+            # WebSocket broadcast
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"driver_{request.user.id}",
+                {
+                    "type": "ride.accepted",
+                    "ride": ride_payload
+                }
+            )
+
+            async_to_sync(channel_layer.group_send)(
+                        f"ride_{ride.id}",
+                        {
+                            "type": "ride_update",
+                            "event": "accepted",
+                            "ride_id": ride.id,
+                            "driver": {
+                                "name": request.user.get_full_name(),
+                                "car_model": request.user.driver.vehicle_model,
+                                "license_plate": request.user.driver.license_plate,
+                                "rating": float(request.user.driver.rating or 0),
+                            },
+                            "eta": 7,
+                            "distance": float(ride.distance_km or 0),
+                            "fare": float(ride.total_fare or 0),
+                        }
+                    )
+
+            return JsonResponse({'status': 'success'})
+
+        except RideRequest.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Ride not found'}, status=404)
 
 @login_required
 def start_trip(request, ride_id):
+    if not hasattr(request.user, 'driver'):
+        return JsonResponse({'error': 'Driver profile not found'}, status=403)
+    
     ride = get_object_or_404(RideRequest, id=ride_id, driver=request.user, status='accepted')
     ride.status = 'started'
     ride.started_at = timezone.now()
     ride.save()
-    messages.success(request, "Trip started! Taking passenger to destination.")
-    return redirect('driver_dashboard')
+    
+    # Notify passenger
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"ride_updates_{ride.passenger.id}",
+        {
+            'type': 'ride_update',
+            'event': 'started',
+            'ride_id': ride.id,
+            'message': 'Your ride has started'
+        }
+    )
+    
+    return JsonResponse({
+        'status': 'success',
+        'ride_id': ride.id,
+        'message': 'Trip started successfully'
+    })
 
 @login_required
 def complete_trip(request, ride_id):
+    if not hasattr(request.user, 'driver'):
+        return JsonResponse({'error': 'Driver profile not found'}, status=403)
+    
     ride = get_object_or_404(RideRequest, id=ride_id, driver=request.user, status='started')
     ride.status = 'completed'
     ride.completed_at = timezone.now()
     ride.save()
-    messages.success(request, "Trip completed successfully! Payment processed.")
-    return redirect('driver_dashboard')
+    
+    # Notify passenger
+    channel_layer = get_channel_layer()
+    async_to_sync(channel_layer.group_send)(
+        f"ride_updates_{ride.passenger.id}",
+        {
+            'type': 'ride_update',
+            'event': 'completed',
+            'ride_id': ride.id,
+            'message': 'Your ride has been completed'
+        }
+    )
+    
+    return JsonResponse({
+        'status': 'success',
+        'ride_id': ride.id,
+        'message': 'Trip completed successfully'
+    })
 
 @login_required(login_url='home')
 def completed_trips(request):
     trips = Trip.objects.filter(driver=request.user, status='completed').order_by('-ended_at')
     return render(request, 'completed-trips.html', {'trips': trips})
 
-@login_required(login_url='home')
-def available_rides(request):
-    if not hasattr(request.user, 'driver'):
-        messages.error(request, "You must be a registered driver to view this page.")
-        return redirect('driver_dashboard')
-    rides = RideRequest.objects.filter(status='pending', driver__isnull=True).order_by('-requested_at')
-    print(rides)
-    return render(request, 'available_rides.html', {'rides': rides})
+
 
 @login_required(login_url='home')
 def driver_profile(request):
@@ -209,11 +415,12 @@ def driver_earnings(request):
 def estimate_fare(request):
     if request.method == 'POST':
         try:
-            try:
-                data = json.loads(request.body.decode('utf-8'))
-            except json.JSONDecodeError:
-                return JsonResponse({'error': 'Invalid JSON'}, status=400) 
-            pickup = data.get('pickup')
+            if request.content_type == 'application/json':
+                data = json.loads(request.body)
+            else:
+                data = request.POST
+            
+            pickup = data.get('pickup') or data.get('current_location')
             destination = data.get('destination')
             if not pickup or not destination:
                 return JsonResponse(

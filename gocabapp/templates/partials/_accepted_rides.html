@@ -1,0 +1,61 @@
+{% for ride in accepted_rides %}
+<div class="trip-card" data-ride-id="{{ ride.id }}">
+    <div class="trip-header">
+        <div class="trip-meta">
+            <span class="trip-time">Accepted {{ ride.accepted_at|timesince }} ago</span>
+            <span class="trip-distance">{{ ride.distance_km|floatformat:1 }} km</span>
+        </div>
+        <div class="trip-price">₦{{ ride.total_fare|floatformat:2 }}</div>
+    </div>
+    
+    <div class="trip-route">
+        <div class="route-point pickup">
+            <i class="fas fa-circle"></i>
+            <div class="location">{{ ride.current_location }}</div>
+        </div>
+        <div class="route-line"></div>
+        <div class="route-point dropoff">
+            <i class="fas fa-map-marker-alt"></i>
+            <div class="location">{{ ride.destination }}</div>
+        </div>
+    </div>
+    
+    <div class="trip-footer">
+        <div class="passenger-info">
+            <div class="passenger-avatar">
+                {{ ride.passenger.first_name|first }}{{ ride.passenger.last_name|first }}
+            </div>
+            <div class="passenger-details">
+                <div class="passenger-name">{{ ride.passenger.get_full_name }}</div>
+                <div class="passenger-phone">
+                    <i class="fas fa-phone"></i> {{ ride.passenger.phone_number|default:"N/A" }}
+                </div>
+            </div>
+        </div>
+        <div class="trip-actions">
+            <form method="post" action="{% url 'start_trip' ride.id %}" class="inline-form">
+                {% csrf_token %}
+                <button type="submit" class="start-btn">
+                    <i class="fas fa-play"></i> Start Trip
+                </button>
+            </form>
+            <form method="post" action="{% url 'cancel_ride' ride.id %}" class="inline-form">
+                {% csrf_token %}
+                <button type="submit" class="cancel-btn">
+                    <i class="fas fa-times"></i> Cancel
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="trip-eta">
+        <i class="fas fa-clock"></i> 
+        <span>ETA to pickup: {{ ride.eta|default:"Calculating..." }}</span>
+    </div>
+</div>
+{% empty %}
+<div class="empty-state">
+    <i class="fas fa-car-side"></i>
+    <p>No rides ready to start</p>
+</div>
+{% endfor %}
