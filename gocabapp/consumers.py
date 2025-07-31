@@ -57,11 +57,15 @@ class RideUpdatesConsumer(AsyncWebsocketConsumer):
                 'type': 'ride_update',
                 'event': event.get('event'),
                 'ride_id': event.get('ride_id'),
+                'data': {
+                'status': event.get('event'),
                 'driver': event.get('driver'),
                 'eta': event.get('eta'),
-                'distance': float(event.get('distance', 0)) if event.get('distance') is not None else None,
                 'fare': float(event.get('fare', 0)) if event.get('fare') is not None else None,
-                # You can extend this with more ride data as needed
+                'distance': float(event.get('distance', 0)) if event.get('distance') is not None else None,
+            }
+                
+                
             }
             await self.send(text_data=json.dumps(response, cls=DjangoJSONEncoder))
         except Exception as e:
@@ -75,6 +79,12 @@ class DriverUpdatesConsumer(AsyncWebsocketConsumer):
             await self.close()
         else:
             self.driver_group = f"driver_{self.user.id}"
+
+            await self.channel_layer.group_add(
+                self.driver_group,
+                self.channel_name
+            )
+
             await self.channel_layer.group_add(
                 "available_drivers",
                 self.channel_name
@@ -82,23 +92,83 @@ class DriverUpdatesConsumer(AsyncWebsocketConsumer):
             await self.accept()
 
     async def disconnect(self, close_code):
+
         if hasattr(self, 'driver_group'):
+            await self.channel_layer.group_discard(
+                self.driver_group,
+                self.channel_name
+            )
+
             await self.channel_layer.group_discard(
                 "available_drivers",
                 self.channel_name
             )
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        if data.get('type') == 'heartbeat':
-            await self.send(text_data=json.dumps({'type': 'heartbeat_ack'}))
+        try:
+            data = json.loads(text_data)
+            if data.get('type') == 'heartbeat':
+                await self.send(text_data=json.dumps({'type': 'heartbeat_ack'}))
+        except Exception as e:
+            logger.error(f"Error processing WebSocket message: {str(e)}")
+    
 
+
+    # Handle ride accepted event
+    async def ride_accepted(self, event):
+        """Handle ride.accepted event from channel layer"""
+        try:
+            response = {
+                'type': 'ride_accepted',
+                'event': 'ride_accepted',
+                'ride': event.get('ride'),
+                'message': 'Ride accepted successfully'
+            }
+            await self.send(text_data=json.dumps(response, cls=DjangoSafeJSONEncoder))
+            logger.info(f"Sent ride_accepted event to driver {self.user.id}")
+        except Exception as e:
+            logger.error(f"Error sending ride_accepted event: {str(e)}")
+
+    # Handle ride update event
+    async def ride_update(self, event):
+        """Handle ride_update event from channel layer"""
+        try:
+            response = {
+                'type': 'ride_update',
+                'event': event.get('event'),
+                'ride_id': event.get('ride_id'),
+                'message': event.get('message'),
+                'data': event.get('data')
+            }
+            await self.send(text_data=json.dumps(response, cls=DjangoSafeJSONEncoder))
+            logger.info(f"Sent ride_update event to driver {self.user.id}: {event.get('event')}")
+        except Exception as e:
+            logger.error(f"Error sending ride_update event: {str(e)}")
+
+    # Handle new ride request event
+    async def new_ride_request(self, event):
+        """Handle new_ride_request event from channel layer"""
+        try:
+            response = {
+                'type': 'new_ride_request',
+                'event': 'new_ride_request',
+                'ride': event.get('ride'),
+                'message': 'New ride request available'
+            }
+            await self.send(text_data=json.dumps(response, cls=DjangoSafeJSONEncoder))
+            logger.info(f"Sent new_ride_request event to driver {self.user.id}")
+        except Exception as e:
+            logger.error(f"Error sending new_ride_request event: {str(e)}")
+
+    # Generic driver update handler
     async def driver_update(self, event):
+        """Handle generic driver_update event from channel layer"""
         try:
             safe_event = json.loads(json.dumps(event, cls=DjangoSafeJSONEncoder))
             await self.send(text_data=json.dumps(safe_event, cls=DjangoSafeJSONEncoder))
+            logger.info(f"Sent driver_update event to driver {self.user.id}")
         except Exception as e:
-            logger.error(f"Error sending driver update: {str(e)}")
+            logger.error(f"Error sending driver_update event: {str(e)}")
 
     @database_sync_to_async
     def is_driver(self):

@@ -607,13 +607,13 @@
 		<!-- Profile Header with Vehicle Focus -->
 		<div class="driver-profile-header">
 		  <div class="driver-identity">
-			<div class="driver-avatar">SM</div>
+			<div class="driver-avatar">{{ driver.initials }}</div>
 			<div class="driver-meta">
-			  <h1>Sarah Miller</h1>
+			  <h1>{{ driver.full_name }}</h1>
 			  <div class="driver-status">
-				<span class="status-badge online">Online</span>
+				<span class="status-badge online">{{ driver.status }}</span>
 				<div class="rating">
-				  <i class="fas fa-star"></i> 4.92 <span class="rating-count">(328 trips)</span>
+				  <i class="fas fa-star"></i> {{ driver.rating|floatformat:2 }}  <span class="rating-count">({{ driver.trip_count }} trips)</span>
 				</div>
 			  </div>
 			</div>
@@ -625,10 +625,10 @@
 				<img src="https://via.placeholder.com/150x80/08915e/FFFFFF?text=Toyota+Camry" alt="Vehicle">
 			  </div>
 			  <div class="vehicle-info">
-				<h3>2020 Toyota Camry</h3>
-				<div class="license-plate">ABC-1234</div>
+				<h3>{{ driver.vehicle.year }} {{ driver.vehicle.model }}</h3>
+				<div class="license-plate">{{ driver.vehicle.license_plate }}</div>
 				<div class="vehicle-stats">
-				  <span><i class="fas fa-gas-pump"></i> Hybrid</span>
+				  <span><i class="fas fa-gas-pump"></i> {{ driver.vehicle.type }}</span>
 				  <span><i class="fas fa-user-friends"></i> 4 seats</span>
 				</div>
 			  </div>
@@ -644,7 +644,7 @@
 			  <h3>Today's Earnings</h3>
 			</div>
 			<div class="stat-value">$187.50</div>
-			<div class="stat-comparison positive">+12% from yesterday</div>
+			
 		  </div>
 		  
 		  <div class="stat-card trips">
@@ -652,8 +652,8 @@
 			  <i class="fas fa-route"></i>
 			  <h3>Completed Trips</h3>
 			</div>
-			<div class="stat-value">14</div>
-			<div class="stat-comparison">5.2 trips/hour</div>
+			<div class="stat-value">{{ driver.stats.completed_trips }}</div>
+			
 		  </div>
 		  
 		  <div class="stat-card rating">
@@ -662,17 +662,10 @@
 			  <h3>Current Rating</h3>
 			</div>
 			<div class="stat-value">4.92</div>
-			<div class="stat-comparison positive">Top 8% in your area</div>
+			
 		  </div>
 		  
-		  <div class="stat-card hours">
-			<div class="stat-header">
-			  <i class="fas fa-clock"></i>
-			  <h3>Online Time</h3>
-			</div>
-			<div class="stat-value">5h 42m</div>
-			<div class="stat-comparison">2h 15m to bonus</div>
-		  </div>
+		  
 		</div>
 	  
 		<!-- Driver Details Section -->
@@ -683,17 +676,17 @@
 			  <div class="document-item valid">
 				<i class="fas fa-id-card"></i>
 				<span>Driver License</span>
-				<small>Expires 05/2025</small>
+				<small>Verified</small>
 			  </div>
 			  <div class="document-item valid">
 				<i class="fas fa-file-contract"></i>
 				<span>Vehicle Insurance</span>
-				<small>Expires 11/2024</small>
+				<small>Verified</small>
 			  </div>
 			  <div class="document-item warning">
 				<i class="fas fa-car"></i>
 				<span>Inspection</span>
-				<small>Expires next month</small>
+				<small>Verified</small>
 			  </div>
 			</div>
 		  </div>

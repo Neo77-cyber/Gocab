@@ -982,12 +982,7 @@
     <ul class="sidebar-menu">
       <li class="menu-title">MAIN</li>
       
-      <li class="menu-item">
-        <a href="{% url 'rider_dashboard' %}" class="menu-link">
-          <i class="fas fa-home"></i>
-          <span>Overview</span>
-        </a>
-      </li>
+      
       
       <li class="menu-item">
         <a href="#" class="menu-link active">
@@ -1087,93 +1082,80 @@
     
    
     <div class="card">
-        <div class="ride-history-section">
-          <h2 class="section-title">Your Ride History</h2>
-          
-          <div class="history-filters">
+      <div class="ride-history-section">
+        <h2 class="section-title">Your Ride History</h2>
+        
+        <div class="history-filters">
             <button class="filter-btn active">All</button>
             <button class="filter-btn">This Week</button>
             <button class="filter-btn">This Month</button>
             <button class="filter-btn">Past Year</button>
-          </div>
-          
-          <div class="ride-cards">
-            <!-- Ride Card 1 -->
-            <div class="ride-card">
-              <div class="ride-header">
-                <div class="ride-date">Today, 10:45 AM</div>
-                <div class="ride-price">$12.50</div>
-              </div>
-              
-              <div class="ride-route">
-                <div class="location-pin start">
-                  <i class="fas fa-circle"></i>
-                  <div class="location-text">8 Areago St</div>
-                </div>
-                <div class="route-line"></div>
-                <div class="location-pin end">
-                  <i class="fas fa-map-marker-alt"></i>
-                  <div class="location-text">Downtown Shopping Mall</div>
-                </div>
-              </div>
-              
-              <div class="ride-footer">
-                <div class="driver-info">
-                  <div class="driver-avatar">JD</div>
-                  <div class="driver-details">
-                    <div class="driver-name">John Doe</div>
-                    <div class="car-info">Toyota Camry • ABC-1234</div>
-                  </div>
-                </div>
-                <button class="action-btn">Details</button>
-              </div>
-            </div>
-            
-            <!-- Ride Card 2 -->
-            <div class="ride-card">
-              <div class="ride-header">
-                <div class="ride-date">Yesterday, 4:30 PM</div>
-                <div class="ride-price">$18.75</div>
-              </div>
-              
-              <div class="ride-route">
-                <div class="location-pin start">
-                  <i class="fas fa-circle"></i>
-                  <div class="location-text">Central Station</div>
-                </div>
-                <div class="route-line"></div>
-                <div class="location-pin end">
-                  <i class="fas fa-map-marker-alt"></i>
-                  <div class="location-text">8 Areago St</div>
-                </div>
-              </div>
-              
-              <div class="ride-footer">
-                <div class="driver-info">
-                  <div class="driver-avatar">SM</div>
-                  <div class="driver-details">
-                    <div class="driver-name">Sarah Miller</div>
-                    <div class="car-info">Honda Accord • XYZ-5678</div>
-                  </div>
-                </div>
-                <button class="action-btn">Details</button>
-              </div>
-            </div>
-          </div>
-          
-          <button class="view-all-btn">View All Ride History</button>
         </div>
+        
+        <div class="ride-cards">
+            {% for ride in recent_rides %}
+            <!-- Ride Card -->
+            <div class="ride-card">
+                <div class="ride-header">
+                    <div class="ride-date">{{ ride.completed_at|date:"l, g:i A" }}</div>
+                    <div class="ride-price">₦{{ ride.total_fare|floatformat:2 }}</div>
+                </div>
+                
+                <div class="ride-route">
+                    <div class="location-pin start">
+                        <i class="fas fa-circle"></i>
+                        <div class="location-text">{{ ride.current_location|truncatechars:20 }}</div>
+                    </div>
+                    <div class="route-line"></div>
+                    <div class="location-pin end">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <div class="location-text">{{ ride.destination|truncatechars:20 }}</div>
+                    </div>
+                </div>
+                
+                <div class="ride-footer">
+                    <div class="driver-info">
+                        <div class="driver-avatar">
+                            {{ ride.driver.get_full_name|default:ride.driver.username|slice:":2"|upper }}
+                        </div>
+                        <div class="driver-details">
+                            <div class="driver-name">{{ ride.driver.get_full_name|default:ride.driver.username }}</div>
+                            <div class="car-info">
+                                {% if ride.driver.driver.vehicle_model %}
+                                    {{ ride.driver.driver.vehicle_model }} • {{ ride.driver.driver.license_plate }}
+                                {% else %}
+                                    Vehicle info not available
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    <button class="action-btn">Details</button>
+                </div>
+            </div>
+            {% empty %}
+            <div class="no-rides">No recent rides found</div>
+            {% endfor %}
+        </div>
+        
+        {% if completed_rides.count > 5 %}
+        <button class="view-all-btn">View All Ride History</button>
+        {% endif %}
+    </div>
       </div>
       <div class="card">
         <div class="profile-section">
             <div class="profile-header">
-              <div class="profile-avatar">JD</div>
+              <div class="profile-avatar">
+                {{ rider_profile.full_name|default:request.user.username|slice:":2"|upper }}
+              </div>
               <div class="profile-info">
-                <h2 class="profile-name">John Doe</h2>
+                <h2 class="profile-name">
+                  {{ rider_profile.full_name|default:request.user.username }}
+                </h2>
                 <div class="profile-rating">
                   <i class="fas fa-star"></i>
                   <span>4.9</span>
-                  <span class="rating-count">(128 rides)</span>
+                  
                 </div>
               </div>
               <button class="edit-profile-btn">
@@ -1183,7 +1165,7 @@
           
             <div class="profile-stats">
               <div class="stat-item">
-                <div class="stat-value">247</div>
+                <div class="stat-value">{{ completed_rides }}</div>
                 <div class="stat-label">Total Rides</div>
               </div>
               <div class="stat-item">
@@ -1191,27 +1173,27 @@
                 <div class="stat-label">Success Rate</div>
               </div>
               <div class="stat-item">
-                <div class="stat-value">2,850</div>
-                <div class="stat-label">Miles Traveled</div>
+                <div class="stat-value">{{ total_miles }}</div>
+                <div class="stat-label">Km Traveled</div>
               </div>
             </div>
           
             <div class="profile-details">
               <div class="detail-item">
                 <i class="fas fa-envelope"></i>
-                <span>john.doe@example.com</span>
+                <span>{{ rider_profile.email|default:request.user.email }}</span>
               </div>
               <div class="detail-item">
                 <i class="fas fa-phone"></i>
-                <span>+1 (555) 123-4567</span>
+                <span>{{ rider_profile.phone_number|default:"Not provided" }}</span>
               </div>
               <div class="detail-item">
                 <i class="fas fa-map-marker-alt"></i>
-                <span>8 Areago St, Brooklyn, NY</span>
+                <span>{{ address }}</span>
               </div>
               <div class="detail-item">
                 <i class="fas fa-calendar-alt"></i>
-                <span>Member since May 2023</span>
+                <span>Member since {{ member_since }}</span>
               </div>
             </div>
           
@@ -1295,10 +1277,38 @@ function handleWebSocketUpdate(data) {
             eta: data.data?.eta,
             fare: data.data?.fare
         });
+
+        if (data.event === 'cancelled') {
+          hideRideTrackingCard();
+      }
     }
 }
 
-// Utility Functions
+function hideRideTrackingCard() {
+  const rideTrackingCard = document.getElementById('rideTrackingCard');
+  const rideForm = document.getElementById('rideForm');
+  
+  if (rideTrackingCard) {
+      rideTrackingCard.style.display = 'none';
+  }
+  
+  if (rideForm) {
+      rideForm.style.display = 'block';
+      resetRideForm(); // Show the form again
+  }
+}
+
+
+function resetRideForm() {
+  const currentLocation = document.getElementById('current-location');
+  const destination = document.getElementById('destination');
+  const fareEstimate = document.getElementById('fareEstimate');
+  
+  if (currentLocation) currentLocation.value = '';
+  if (destination) destination.value = '';
+  if (fareEstimate) fareEstimate.style.display = 'none';
+}
+
 function hideFareEstimate() {
     const fareEstimate = document.getElementById('fareEstimate');
     if (fareEstimate) {
@@ -1322,7 +1332,7 @@ function setLoadingState(button, isLoading) {
     }
 }
 
-// Global callback function for Google Maps API
+
 window.initAutocomplete = function() {
     console.log("Google Maps callback initiated");
     
@@ -1846,6 +1856,7 @@ function updateRideStatusUI(data) {
             statusElement.textContent = "Trip cancelled";
             statusElement.style.color = "red";
             cancelButton.style.display = 'none';
+            hideRideTrackingCard();
             break;
     }
 }
@@ -1872,40 +1883,47 @@ function updateStarRating(rating) {
 }
 
 async function cancelRide() {
-    if (!currentRideId || !confirm('Are you sure you want to cancel this ride?')) return;
-    
-    const cancelButton = document.getElementById('cancelRideBtn');
-    if (cancelButton) cancelButton.disabled = true;
-    
-    try {
-        const response = await fetch(`/cancel-ride/${currentRideId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken')
-            }
-        });
+  if (!currentRideId || !confirm('Are you sure you want to cancel this ride?')) return;
+  
+  const cancelButton = document.getElementById('cancelRideBtn');
+  if (cancelButton) cancelButton.disabled = true;
+  
+  try {
+      const response = await fetch(`/cancel-ride/${currentRideId}/`, {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': getCookie('csrftoken')
+          },
+          credentials: 'same-origin'
+      });
+      
+      if (response.ok) {
         
-        if (response.ok) {
-            clearInterval(rideStatusInterval);
-            updateRideStatusUI({ status: 'cancelled' });
-            
-            if (rideSocket && rideSocket.readyState === WebSocket.OPEN) {
-                rideSocket.send(JSON.stringify({
-                    action: 'unsubscribe',
-                    ride_id: currentRideId
-                }));
-            }
-        } else {
-            throw new Error('Failed to cancel ride');
+        updateRideStatusUI({ status: 'cancelled' });
+        hideRideTrackingCard();
+        
+        clearInterval(rideStatusInterval);
+        
+        if (rideSocket && rideSocket.readyState === WebSocket.OPEN) {
+            rideSocket.send(JSON.stringify({
+                action: 'unsubscribe',
+                ride_id: currentRideId
+            }));
         }
-    } catch (error) {
-        console.error('Cancel error:', error);
-        showErrorToast('Failed to cancel ride. Please try again.');
-    } finally {
-        const cancelButton = document.getElementById('cancelRideBtn');
-        if (cancelButton) cancelButton.disabled = false;
+    } else {
+        throw new Error('Failed to cancel ride');
     }
+      
+  } catch (error) {
+      console.error('Cancel error:', error);
+      showErrorToast(error.message);
+  } finally {
+      const cancelButton = document.getElementById('cancelRideBtn');
+      if (cancelButton) cancelButton.disabled = false;
+  }
 }
+
 
 function getCookie(name) {
     let cookieValue = null;

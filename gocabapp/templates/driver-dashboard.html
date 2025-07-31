@@ -391,6 +391,14 @@
 				{% include 'partials/_active_rides.html' %}
 			</div>
 		</div>
+
+		<!-- Active Trips Section -->
+		<div class="trip-section" id="completed-trips">
+			<div id="completedRidesContainer">
+				{% include 'partials/_completed_rides.html' %}
+			</div>
+		</div>
+
 	</div>
 	
 	<!-- WebSocket Status Indicator -->
@@ -440,26 +448,69 @@
 			const data = JSON.parse(event.data);
 			console.log('WebSocket message received:', data);
 			
-			switch(data.event) {
+			// Handle different event types - use consistent property name
+			const eventType = data.event || data.type;
+			
+			switch(eventType) {
 				case 'new_ride_request':
+					console.log('New ride request received');
 					updatePendingRides();
 					break;
 					
 				case 'ride_accepted':
-					if (data.driver_id !== {{ request.user.id }}) {
+					console.log('Ride accepted event received');
+					if (data.ride && data.ride.driver_id !== {{ request.user.id }}) {
 						updatePendingRides();
 					}
 					break;
-					
-				case 'ride_started':
-					updateAcceptedRides();
+		
+				case 'ride_update':
+					console.log('Ride update event received:', data);
+					// Handle ride status updates
+					if (data.status) {
+						switch(data.status) {
+							case 'accepted':
+								console.log('Ride status: accepted');
+								updatePendingRides();
+								updateAcceptedRides();
+								break;
+							case 'started':
+								console.log('Ride status: started');
+								updateAcceptedRides();
+								updateActiveRides();
+								break;
+							case 'completed':
+								console.log('Ride status: completed');
+								updateActiveRides();
+								updateCompletedRides();
+								if (data.driver && data.driver.id === {{ request.user.id }}) {
+									const completedTab = document.querySelector('[data-tab="completed-trips"]');
+									if (!completedTab.classList.contains('active')) {
+										completedTab.click();
+									}
+								}
+								break;
+							default:
+								console.log('Unknown ride status:', data.status);
+						}
+					}
 					break;
 					
-				case 'ride_completed':
-					updateActiveRides();
+				case 'heartbeat_ack':
+					// Silent heartbeat acknowledgment
 					break;
+					
+				default:
+					console.log('Unknown WebSocket event type:', eventType);
 			}
 		};
+
+		
+    setInterval(() => {
+        if (driverSocket.readyState === WebSocket.OPEN) {
+            driverSocket.send(JSON.stringify({type: 'heartbeat'}));
+        }
+    }, 30000);
 	
 		// Tab switching functionality
 		document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -502,21 +553,41 @@
 		// Function to update accepted rides
 		function updateAcceptedRides() {
 			fetch('/driver/accepted-rides/')
-				.then(response => response.text())
-				.then(html => {
-					document.getElementById('acceptedRidesContainer').innerHTML = html;
+				.then(response => response.json())
+				.then(data => {
+					document.getElementById('acceptedRidesContainer').innerHTML = data.html;
 					updateBadge('acceptedRidesBadge', document.querySelectorAll('#acceptedRidesContainer .trip-card').length);
 					attachStartHandlers();
+				})
+				.catch(error => {
+					console.error('Error fetching accepted rides:', error);
 				});
 		}
 	
-		// Function to update active rides
 		function updateActiveRides() {
 			fetch('/driver/active-rides/')
-				.then(response => response.text())
-				.then(html => {
-					document.getElementById('activeRidesContainer').innerHTML = html;
+				.then(response => response.json())
+				.then(data => {
+					document.getElementById('activeRidesContainer').innerHTML = data.html;
 					updateBadge('activeTripsBadge', document.querySelectorAll('#activeRidesContainer .trip-card').length);
+				})
+				.catch(error => {
+					console.error('Error fetching active rides:', error);
+				});
+		}
+
+		function updateCompletedRides() {
+			fetch('/driver/completed-trips/')
+				.then(response => response.json())
+				.then(data => {
+					const container = document.getElementById('completedRidesContainer');
+            			container.innerHTML = data.html;
+            
+            			document.querySelector('#completed-trips .badge').textContent = 
+                	container.querySelectorAll('.trip-card').length;
+				})
+				.catch(error => {
+					console.error('Error fetching completed rides:', error);
 				});
 		}
 	
@@ -561,6 +632,8 @@
 							// Update badge count
 							const badge = document.getElementById('newRequestsBadge');
 							if(badge) badge.textContent = parseInt(badge.textContent) - 1;
+
+							updateAcceptedRides();
 						}
 					})
 					.catch(error => {
@@ -571,37 +644,107 @@
 				});
 			});
 		}
-		// Attach event handlers to start buttons
+		
 		function attachStartHandlers() {
 			document.querySelectorAll('.start-btn').forEach(btn => {
 				btn.addEventListener('click', function(e) {
 					e.preventDefault();
 					const form = this.closest('form');
-					const formData = new FormData(form);
+					console.log('Form action:', form.action);
 					
+					// Disable button during request
+					this.disabled = true;
+					const originalText = this.innerHTML;
+					this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Starting...';
+		
 					fetch(form.action, {
 						method: 'POST',
-						body: formData,
 						headers: {
-							'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
 							'Accept': 'application/json',
-						}
+						},
+						body: new FormData(form)
 					})
-					.then(response => response.json())
+					.then(response => {
+						console.log('Response status:', response.status);
+						if (!response.ok) throw new Error('Network response failed');
+						return response.json();
+					})
 					.then(data => {
+						console.log('Response data:', data);
 						if (data.status === 'success') {
+							// Success - update both ride lists
 							updateAcceptedRides();
 							updateActiveRides();
+						} else {
+							throw new Error(data.message || 'Failed to start trip');
 						}
+					})
+					.catch(error => {
+						console.error('Error:', error);
+						alert('Failed to start trip: ' + error.message);
+					})
+					.finally(() => {
+						this.disabled = false;
+						this.innerHTML = originalText;
 					});
 				});
 			});
 		}
+
+		// Add this to your existing JavaScript
+function attachCompleteHandlers() {
+    document.querySelectorAll('.complete-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            const form = this.closest('form');
+            
+            // Disable button during request
+            this.disabled = true;
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing...';
+
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'Accept': 'application/json',
+                },
+                body: new FormData(form)
+            })
+            .then(response => {
+                if (!response.ok) throw new Error('Network response failed');
+                return response.json();
+            })
+            .then(data => {
+                if (data.status === 'success') {
+                    // Update all relevant sections
+                    updateActiveRides();
+                    updateCompletedRides();
+                    
+                    // Switch to completed tab
+                    document.querySelector('[data-tab="completed-trips"]').click();
+                } else {
+                    throw new Error(data.message || 'Failed to complete trip');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to complete trip: ' + error.message);
+            })
+            .finally(() => {
+                this.disabled = false;
+                this.innerHTML = originalText;
+            });
+        });
+    });
+}
 	
 		// Initial setup
 		updatePendingRides();
 		updateAcceptedRides();
 		updateActiveRides();
+		updateCompletedRides();
+		attachCompleteHandlers();
 	});
  </script>
 </body>

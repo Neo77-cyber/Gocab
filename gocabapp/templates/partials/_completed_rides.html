@@ -1,0 +1,24 @@
+{% for ride in completed_rides %}
+<div class="trip-card completed">
+    <div class="trip-header">
+        
+        <span class="trip-date">{{ ride.completed_at|date:"M d, Y H:i" }}</span>
+    </div>
+    <div class="trip-route">
+        <div class="route-point pickup">
+            <i class="fas fa-map-marker-alt"></i>
+            <span>{{ ride.current_location }}</span>
+        </div>
+        <div class="route-point dropoff">
+            <i class="fas fa-flag-checkered"></i>
+            <span>{{ ride.destination }}</span>
+        </div>
+    </div>
+    <div class="trip-footer">
+        <span class="fare">₦{{ ride.total_fare|floatformat:2 }}</span>
+        <span class="duration">{{ ride.duration_min }} mins</span>
+    </div>
+</div>
+{% empty %}
+<div class="no-trips">No completed trips yet</div>
+{% endfor %}

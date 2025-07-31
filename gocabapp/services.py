@@ -70,20 +70,20 @@ def calculate_ride_fare(distance_km, duration_min, vehicle_type='standard'):
     # Vehicle type rates (in Naira)
     RATES = {
         'standard': {
-            'base': 500.00,
-            'per_km': 50.00,
+            'base': 2000.00,
+            'per_km': 200.00,
             'per_min': 10.00,
-            'min_fare': 800.00
+            'min_fare': 1000.00
         },
         'premium': {
-            'base': 800.00,
-            'per_km': 75.00,
+            'base': 1500.00,
+            'per_km': 100.00,
             'per_min': 15.00,
             'min_fare': 1200.00
         },
         'xl': {
-            'base': 700.00,
-            'per_km': 60.00,
+            'base': 1000.00,
+            'per_km': 80.00,
             'per_min': 12.00,
             'min_fare': 1000.00
         }
