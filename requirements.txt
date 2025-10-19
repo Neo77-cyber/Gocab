@@ -30,3 +30,4 @@ twisted[tls]==25.5.0; python_full_version >= '3.8.0'
 txaio==23.1.1; python_version >= '3.7'
 typing-extensions==4.14.0; python_version >= '3.9'
 zope-interface==7.2; python_version >= '3.8'
+googlemaps>=4.0.0
