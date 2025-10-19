@@ -1,32 +1,9 @@
 -i https://pypi.org/simple
-asgiref==3.8.1; python_version >= '3.8'
-async-timeout==5.0.1; python_full_version < '3.11.3'
-attrs==25.3.0; python_version >= '3.8'
-autobahn==24.4.2; python_version >= '3.9'
-automat==25.4.16; python_version >= '3.9'
-cffi==1.17.1; platform_python_implementation != 'PyPy'
 channels[daphne]==4.2.2; python_version >= '3.8'
 channels-redis==4.2.1; python_version >= '3.8'
-constantly==23.10.4; python_version >= '3.8'
-cryptography==45.0.4; python_version >= '3.7' and python_full_version not in '3.9.0, 3.9.1'
-daphne==4.2.0
 dj-database-url==3.0.0
 django==4.2.23; python_version >= '3.8'
-hyperlink==21.0.0
-idna==3.10
-incremental==24.7.2; python_version >= '3.8'
-msgpack==1.1.1; python_version >= '3.8'
 psycopg2==2.9.10; python_version >= '3.8'
-pyasn1==0.6.1; python_version >= '3.8'
-pyasn1-modules==0.4.2; python_version >= '3.8'
-pycparser==2.22; python_version >= '3.8'
-pyopenssl==25.1.0
 redis==6.2.0; python_version >= '3.9'
-service-identity==24.2.0
-setuptools==80.9.0; python_version >= '3.9'
-sqlparse==0.5.3; python_version >= '3.8'
-tomli==2.2.1; python_version < '3.11'
-twisted[tls]==25.5.0; python_full_version >= '3.8.0'
-txaio==23.1.1; python_version >= '3.7'
-typing-extensions==4.14.0; python_version >= '3.9'
-zope-interface==7.2; python_version >= '3.8'
+
+
