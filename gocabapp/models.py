@@ -35,7 +35,11 @@ class Driver(models.Model):
     bank_name = models.CharField(max_length=100)
     account_number = models.CharField(max_length=20, unique=True)
     account_holder_name = models.CharField(max_length=255)
-    is_approved = models.BooleanField(default=False)  # Approval status
+    latitude = models.FloatField(blank=True, null=True)
+    longitude = models.FloatField(blank=True, null=True)
+    current_address = models.CharField(max_length=255, blank=True)
+    location_updated_at = models.DateTimeField(auto_now=True)
+    is_approved = models.BooleanField(default=False)  
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
