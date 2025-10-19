@@ -3,7 +3,7 @@ import logging
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from django.contrib.auth.models import AnonymousUser
-from .models import RideRequest, Driver
+from .models import RideRequest, Driver, Notification
 from django.core.serializers.json import DjangoJSONEncoder
 from .encoders import DjangoSafeJSONEncoder
 
@@ -190,3 +190,41 @@ class DriverUpdatesConsumer(AsyncWebsocketConsumer):
             'fare': float(ride.total_fare) if ride.total_fare else None,
             'requested_at': ride.requested_at.isoformat()
         } for ride in rides]
+    
+class NotificationConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.user = self.scope["user"]
+        if self.user.is_anonymous:
+            await self.close()
+        else:
+            await self.channel_layer.group_add(
+                f"notifications_{self.user.id}",
+                self.channel_name
+            )
+            # Send current notification count when connecting
+            count = await self.get_notification_count()
+            await self.accept()
+            await self.send(text_data=json.dumps({
+                'type': 'counter',
+                'count': count
+            }))
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            f"notifications_{self.user.id}",
+            self.channel_name
+        )
+
+    async def notification_update(self, event):
+        """Handle counter updates"""
+        await self.send(text_data=json.dumps({
+            'type': 'counter',
+            'count': event['count']
+        }))
+    
+    @database_sync_to_async
+    def get_notification_count(self):
+        return Notification.objects.filter(
+            user=self.user,
+            is_active=True
+        ).count()

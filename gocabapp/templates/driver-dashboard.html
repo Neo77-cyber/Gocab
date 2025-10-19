@@ -484,15 +484,33 @@
 								updateActiveRides();
 								updateCompletedRides();
 								if (data.driver && data.driver.id === {{ request.user.id }}) {
-									const completedTab = document.querySelector('[data-tab="completed-trips"]');
-									if (!completedTab.classList.contains('active')) {
-										completedTab.click();
-									}
+									
+									setTimeout(() => {
+										const completedTab = document.querySelector('[data-tab="completed-trips"]');
+										if (completedTab && !completedTab.classList.contains('active')) {
+											completedTab.click();
+										}
+									}, 500);
 								}
 								break;
 							default:
 								console.log('Unknown ride status:', data.status);
 						}
+					}
+					break;
+				
+				case 'completed':  // Handle direct completed event
+					console.log('Ride completed event received');
+					updateActiveRides();
+					updateCompletedRides();
+					// Auto-switch to completed tab if it's for this driver
+					if (data.driver && data.driver.id === {{ request.user.id }}) {
+						setTimeout(() => {
+							const completedTab = document.querySelector('[data-tab="completed-trips"]');
+							if (completedTab && !completedTab.classList.contains('active')) {
+								completedTab.click();
+							}
+						}, 500);
 					}
 					break;
 					
@@ -570,6 +588,8 @@
 				.then(data => {
 					document.getElementById('activeRidesContainer').innerHTML = data.html;
 					updateBadge('activeTripsBadge', document.querySelectorAll('#activeRidesContainer .trip-card').length);
+					// IMPORTANT: Attach complete handlers after updating content
+					attachCompleteHandlers();
 				})
 				.catch(error => {
 					console.error('Error fetching active rides:', error);
@@ -583,8 +603,10 @@
 					const container = document.getElementById('completedRidesContainer');
             			container.innerHTML = data.html;
             
-            			document.querySelector('#completed-trips .badge').textContent = 
-                	container.querySelectorAll('.trip-card').length;
+					const completedBadge = document.querySelector('#completed-trips .badge');
+					if (completedBadge) {
+							completedBadge.textContent = container.querySelectorAll('.trip-card').length;
+						}
 				})
 				.catch(error => {
 					console.error('Error fetching completed rides:', error);
@@ -691,60 +713,116 @@
 			});
 		}
 
-		// Add this to your existing JavaScript
-function attachCompleteHandlers() {
-    document.querySelectorAll('.complete-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            const form = this.closest('form');
-            
-            // Disable button during request
-            this.disabled = true;
-            const originalText = this.innerHTML;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing...';
+		// Add this INSIDE your DOMContentLoaded event listener
+// Replace your attachCompleteHandlers() calls with this
 
-            fetch(form.action, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': getCookie('csrftoken'),
-                    'Accept': 'application/json',
-                },
-                body: new FormData(form)
-            })
-            .then(response => {
-                if (!response.ok) throw new Error('Network response failed');
-                return response.json();
-            })
-            .then(data => {
-                if (data.status === 'success') {
-                    // Update all relevant sections
-                    updateActiveRides();
-                    updateCompletedRides();
-                    
-                    // Switch to completed tab
-                    document.querySelector('[data-tab="completed-trips"]').click();
-                } else {
-                    throw new Error(data.message || 'Failed to complete trip');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to complete trip: ' + error.message);
-            })
-            .finally(() => {
-                this.disabled = false;
-                this.innerHTML = originalText;
-            });
+// Event delegation for complete buttons - works with dynamic content
+document.addEventListener('click', function(e) {
+    // Check if clicked element is a complete button or inside one
+    const completeBtn = e.target.closest('.complete-btn');
+    if (completeBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('Complete button clicked!');
+        
+        const form = completeBtn.closest('form');
+        if (!form) {
+            console.error('No form found for complete button');
+            return;
+        }
+        
+        // Check if already processing
+        if (completeBtn.disabled) {
+            console.log('Button already disabled, ignoring click');
+            return;
+        }
+        
+        // Debug: Log form details
+        console.log('=== COMPLETE TRIP DEBUG ===');
+        console.log('Form action:', form.action);
+        
+        const formData = new FormData(form);
+        console.log('Form data:');
+        for (let [key, value] of formData.entries()) {
+            console.log(`  ${key}: ${value}`);
+        }
+        
+        // Get CSRF token
+        const csrfToken = form.querySelector('[name=csrfmiddlewaretoken]')?.value || 
+                         document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                         document.querySelector('meta[name=csrf-token]')?.getAttribute('content');
+        
+        console.log('CSRF Token found:', csrfToken ? 'Yes' : 'No');
+        
+        // Disable button during request
+        completeBtn.disabled = true;
+        const originalText = completeBtn.innerHTML;
+        completeBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing...';
+
+        // Prepare headers
+        const headers = {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        };
+        
+        // Add CSRF token if found
+        if (csrfToken) {
+            headers['X-CSRFToken'] = csrfToken;
+        }
+
+        console.log('Sending POST request to:', form.action);
+
+        fetch(form.action, {
+            method: 'POST',
+            headers: headers,
+            body: formData
+        })
+        .then(response => {
+            console.log('Response status:', response.status);
+            return response.json();
+        })
+        .then(data => {
+            console.log('Success response data:', data);
+            if (data.status === 'success') {
+                // Update the UI
+                updateActiveRides();
+                updateCompletedRides();
+                
+                // Switch to completed tab
+                setTimeout(() => {
+                    const completedTab = document.querySelector('[data-tab="completed-trips"]');
+                    if (completedTab && !completedTab.classList.contains('active')) {
+                        console.log('Switching to completed tab');
+                        completedTab.click();
+                    }
+                }, 500);
+                
+                console.log('Trip completed successfully, UI updated');
+            } else {
+                throw new Error(data.message || data.error || 'Failed to complete trip');
+            }
+        })
+        .catch(error => {
+            console.error('Error completing trip:', error);
+            alert(`Failed to complete trip: ${error.message}`);
+        })
+        .finally(() => {
+            completeBtn.disabled = false;
+            completeBtn.innerHTML = originalText;
+            console.log('=== COMPLETE TRIP DEBUG END ===');
         });
-    });
-}
+    }
+});
+
+// Remove all attachCompleteHandlers() calls from your code since event delegation handles it
 	
 		// Initial setup
 		updatePendingRides();
 		updateAcceptedRides();
 		updateActiveRides();
 		updateCompletedRides();
-		attachCompleteHandlers();
+		
 	});
  </script>
 </body>

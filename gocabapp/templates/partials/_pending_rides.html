@@ -112,9 +112,9 @@
       display: flex;
       align-items: center;
       gap: 12px;
-    }
-    
-    .passenger-avatar {
+  }
+  
+  .passenger-avatar {
       width: 40px;
       height: 40px;
       border-radius: 50%;
@@ -125,24 +125,277 @@
       justify-content: center;
       font-weight: 600;
       font-size: 0.9rem;
-    }
-    
-    .passenger-name {
+  }
+  
+  .passenger-details {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+  }
+  
+  .passenger-name {
       font-weight: 600;
-    }
-    
-    .passenger-rating {
-      font-size: 13px;
-      color: #666;
+      color: #1f2937;
+      font-size: 0.95rem;
+      line-height: 1.2;
+  }
+  
+  .passenger-contact {
       display: flex;
       align-items: center;
-      gap: 4px;
-      margin-top: 2px;
-    }
-    
-    .passenger-rating i {
-      color: #FFC107;
-    }
+      gap: 8px;
+      flex-wrap: wrap;
+  }
+  
+  .passenger-phone {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+      color: #4b5563;
+      background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid #d1d5db;
+      font-weight: 500;
+  }
+  
+  .passenger-phone i {
+      color: #3b82f6;
+      font-size: 0.7rem;
+  }
+  
+  .passenger-rating {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.75rem;
+      color: #d97706;
+      background: linear-gradient(135deg, #fef3c7, #fed7aa);
+      padding: 3px 8px;
+      border-radius: 12px;
+      border: 1px solid #fcd34d;
+      font-weight: 600;
+  }
+  
+  .passenger-rating i {
+      color: #d97706;
+      font-size: 0.7rem;
+  }
+  
+  /* Hover effects */
+  .passenger-info:hover .passenger-avatar {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+      transition: all 0.2s ease;
+  }
+  
+  .passenger-info:hover .passenger-name {
+      color: #08915e;
+      transition: color 0.2s ease;
+  }
+  
+  .passenger-phone:hover {
+      background: linear-gradient(135deg, #08915e, #bae6fd);
+      color: #0369a1;
+      border-color: #7dd3fc;
+      transform: translateY(-1px);
+      transition: all 0.2s ease;
+  }
+
+
+  .trip-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.inline-form {
+    margin: 0;
+}
+
+.start-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.start-btn:hover {
+    background: linear-gradient(135deg, #059669, #047857);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+.cancel-btn {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.cancel-btn:hover {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+}
+
+/* Trip ETA */
+.trip-eta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 12px;
+    background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+    border-radius: 15px;
+    border: 1px solid #e2e8f0;
+}
+
+.eta-icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+}
+
+.eta-text {
+    font-size: 0.9rem;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+/* Active Ride Specific Styles */
+.trip-card.active {
+  
+  
+}
+
+/* Progress Bar */
+.trip-progress {
+  margin: 20px 0;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6px;
+  background: #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #22c55e);
+  border-radius: 10px;
+  transition: width 0.3s ease;
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* Complete Button */
+.complete-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.complete-btn:hover {
+  background: linear-gradient(135deg, #059669, #047857);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Passenger Location */
+.passenger-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.passenger-location i {
+  color: #ef4444;
+  font-size: 0.8rem;
+}
+
+/* Trip Timer */
+.trip-timer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+  padding: 12px;
+  background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+  border-radius: 15px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+  color: #4b5563;
+  font-weight: 500;
+}
+
+.trip-timer i {
+  color: #f59e0b;
+}
+  
+  /* Responsive design */
+  @media (max-width: 480px) {
+      .passenger-contact {
+          gap: 6px;
+      }
+      
+      .passenger-phone {
+          font-size: 0.75rem;
+          padding: 2px 6px;
+      }
+      
+      .passenger-rating {
+          font-size: 0.7rem;
+          padding: 2px 6px;
+      }
+  }
   
     /* Accept Button */
     .accept-btn {
@@ -247,17 +500,36 @@
     </div>
     
     <div class="trip-footer">
-        <div class="passenger-info">
-            <div class="passenger-avatar">
-                {{ ride.passenger.first_name|first }}{{ ride.passenger.last_name|first }}
+      <div class="passenger-info">
+        <div class="passenger-avatar">
+            {{ ride.passenger.get_full_name|first|default:ride.passenger.username|first }}
+        </div>
+        <div class="passenger-details">
+            <div class="passenger-name">
+                {{ ride.passenger.get_full_name|default:ride.passenger.username }}
             </div>
-            <div class="passenger-details">
-                <div class="passenger-name">{{ ride.passenger.get_full_name }}</div>
+            <div class="passenger-contact">
+                <div class="passenger-phone">
+                    <i class="fas fa-phone"></i>
+                    {% if ride.passenger.rider and ride.passenger.rider.phone_number %}
+                        {{ ride.passenger.rider.phone_number }}
+                    {% else %}
+                        No phone number
+                    {% endif %}
+                </div>
                 <div class="passenger-rating">
-                    <i class="fas fa-star"></i> {{ ride.passenger.rider.rating|default:"5.0" }}
+                    <i class="fas fa-star"></i>
+                    {% with rider_profile=ride.passenger.rider %}
+                        {% if rider_profile and rider_profile.rating %}
+                            {{ rider_profile.rating|floatformat:1 }}
+                        {% else %}
+                            5.0
+                        {% endif %}
+                    {% endwith %}
                 </div>
             </div>
         </div>
+    </div>
         <div class="trip-actions">
             <form method="post" action="{% url 'accept_ride' ride.id %}" class="accept-ride-form">
                 {% csrf_token %}

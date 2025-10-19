@@ -3,9 +3,9 @@
     <div class="trip-header">
         <div class="trip-meta">
             <span class="trip-time">Started {{ ride.started_at|timesince }} ago</span>
-            <span class="trip-distance">{{ ride.distance_km|floatformat:1 }} km</span>
+            <span class="trip-distance">{{ ride.distance_km|floatformat:1|default:"0.0" }} km</span>
         </div>
-        <div class="trip-price">₦{{ ride.total_fare|floatformat:2 }}</div>
+        <div class="trip-price">₦{{ ride.total_fare|floatformat:2|default:"0.00" }}</div>
     </div>
     
     <div class="trip-progress">
@@ -24,7 +24,17 @@
                 {{ ride.passenger.first_name|first }}{{ ride.passenger.last_name|first }}
             </div>
             <div class="passenger-details">
-                <div class="passenger-name">{{ ride.passenger.get_full_name }}</div>
+                <div class="passenger-name">{{ ride.passenger.get_full_name|default:ride.passenger.username }}</div>
+                <div class="passenger-contact">
+                    <div class="passenger-phone">
+                        <i class="fas fa-phone"></i> 
+                        {% if ride.passenger.rider and ride.passenger.rider.phone_number %}
+                            {{ ride.passenger.rider.phone_number }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </div>
+                </div>
                 <div class="passenger-location">
                     <i class="fas fa-map-marker-alt"></i> {{ ride.current_location }}
                 </div>
@@ -33,11 +43,11 @@
         <div class="trip-actions">
             <form method="post" action="{% url 'complete_trip' ride.id %}" class="inline-form">
                 {% csrf_token %}
+                <input type="hidden" name="ride_id" value="{{ ride.id }}">
                 <button type="submit" class="complete-btn">
                     <i class="fas fa-flag-checkered"></i> Complete
                 </button>
             </form>
-            
         </div>
     </div>
     
