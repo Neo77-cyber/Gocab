@@ -47,6 +47,10 @@ class DriverRegistrationForm(forms.Form):
     validators=[RegexValidator(r'^\d{10}$', 'Account number must be 10 digits long.')]
 )
     account_holder_name = forms.CharField(max_length=255)
+
+    latitude = forms.FloatField(required=False, widget=forms.HiddenInput())
+    longitude = forms.FloatField(required=False, widget=forms.HiddenInput())
+    current_address = forms.CharField(required=False, widget=forms.HiddenInput())
     
     def clean(self):
         cleaned_data = super().clean()

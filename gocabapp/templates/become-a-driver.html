@@ -209,6 +209,33 @@
                           </div>
                       </div>
                   </div>
+
+                  <div class="form-section">
+                    <h3>Current Location</h3>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Detect Your Current Location</label>
+                            <div class="location-section">
+                                <button type="button" id="detect-location" class="location-btn">
+                                    <i class="fas fa-location-crosshairs"></i>
+                                    Detect My Location
+                                </button>
+                                <div id="location-status" class="location-status">
+                                    Location not detected yet
+                                </div>
+                                <div id="location-details" class="location-details" style="display: none;">
+                                    <p><strong>Address:</strong> <span id="location-address">-</span></p>
+                                    <p><strong>Coordinates:</strong> <span id="location-coords">-</span></p>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden fields to store location data -->
+                            {{ form.latitude }}
+                            {{ form.longitude }}
+                            {{ form.current_address }}
+                        </div>
+                    </div>
+                </div>
       
                   <div class="form-section">
                       <h3>Login Information</h3>
@@ -408,6 +435,113 @@
 
   <!-- Preloader -->
   <div id="preloader"></div>
+
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const detectBtn = document.getElementById('detect-location');
+        const locationStatus = document.getElementById('location-status');
+        const locationDetails = document.getElementById('location-details');
+        const locationAddress = document.getElementById('location-address');
+        const locationCoords = document.getElementById('location-coords');
+        const latitudeField = document.querySelector('#id_latitude');
+        const longitudeField = document.querySelector('#id_longitude');
+        const addressField = document.querySelector('#id_current_address');
+    
+        detectBtn.addEventListener('click', function() {
+            detectBtn.disabled = true;
+            locationStatus.textContent = 'Detecting your location...';
+            locationStatus.className = 'location-status';
+    
+            if (!navigator.geolocation) {
+                showLocationError('Geolocation is not supported by this browser.');
+                return;
+            }
+    
+            navigator.geolocation.getCurrentPosition(
+                // Success callback
+                async function(position) {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    
+                    // Update hidden fields
+                    latitudeField.value = lat;
+                    longitudeField.value = lng;
+                    
+                    // Show coordinates
+                    locationCoords.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                    
+                    // Try to get address from coordinates
+                    try {
+                        const address = await getAddressFromCoords(lat, lng);
+                        locationAddress.textContent = address;
+                        addressField.value = address;
+                    } catch (error) {
+                        locationAddress.textContent = 'Address not available';
+                        addressField.value = `Coordinates: ${lat}, ${lng}`;
+                    }
+                    
+                    // Show success
+                    locationStatus.textContent = 'Location detected successfully!';
+                    locationStatus.className = 'location-status success';
+                    locationDetails.style.display = 'block';
+                    detectBtn.disabled = false;
+                },
+                // Error callback
+                function(error) {
+                    let errorMessage = 'Unable to detect your location. ';
+                    
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            errorMessage += 'Please allow location access and try again.';
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            errorMessage += 'Location information is unavailable.';
+                            break;
+                        case error.TIMEOUT:
+                            errorMessage += 'Location request timed out.';
+                            break;
+                        default:
+                            errorMessage += 'An unknown error occurred.';
+                            break;
+                    }
+                    
+                    showLocationError(errorMessage);
+                },
+                // Options
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 60000
+                }
+            );
+        });
+    
+        function showLocationError(message) {
+            locationStatus.textContent = message;
+            locationStatus.className = 'location-status error';
+            detectBtn.disabled = false;
+        }
+    
+        async function getAddressFromCoords(lat, lng) {
+            // Using OpenStreetMap Nominatim (free, no API key required)
+            const response = await fetch(
+                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+            );
+            
+            if (!response.ok) {
+                throw new Error('Failed to get address');
+            }
+            
+            const data = await response.json();
+            return data.display_name || 'Address not available';
+        }
+    
+        // Optional: Auto-detect location when page loads
+        // detectBtn.click();
+    });
+    </script>
+    
 
   <!-- Vendor JS Files -->
   <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>

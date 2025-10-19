@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-p1f4uim8(v93tcx_orusm)mrjc9no#^_&0z!ts7%c5x)o82v(m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['gocab.onrender.com']
 
 
 # Application definition
