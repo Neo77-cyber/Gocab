@@ -23,7 +23,10 @@ from django.dispatch import receiver
 from django.template.loader import render_to_string
 from .encoders import DjangoSafeJSONEncoder
 from django.db.models import Sum  
-
+import requests
+from django.conf import settings
+import decimal
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 
 logger = logging.getLogger(__name__)
 
@@ -120,6 +123,10 @@ def ride_request_update(sender, instance, created, **kwargs):
 def ride_status(request, ride_id):
     try:
         ride = get_object_or_404(RideRequest, id=ride_id, passenger=request.user)
+
+        if ride.status in ['completed', 'cancelled']:
+            if 'current_ride_id' in request.session:
+                del request.session['current_ride_id']
         
         # Basic timestamp handling
         last_updated = ride.requested_at.isoformat()
@@ -135,11 +142,14 @@ def ride_status(request, ride_id):
         # Minimal response without any decimal fields
         response_data = {
             'status': ride.status,
+            'fare': float(ride.total_fare) if ride.total_fare else 0,
             'ride_id': ride.id,
             'driver': driver_info,
             'current_location': ride.current_location,
             'destination': ride.destination,
-            'last_updated': last_updated
+            'last_updated': last_updated,
+            'payment_status': ride.payment_status,
+
         }
         
         return JsonResponse(response_data)
@@ -151,19 +161,12 @@ def ride_status(request, ride_id):
             'details': str(e)
         }, status=500)
 
-# Rider Views
 @login_required(login_url='home')
 def rider_dashboard(request):
     active_ride = RideRequest.objects.filter(
         passenger=request.user,
         status__in=['pending', 'accepted', 'started']
     ).order_by('-requested_at').first()
-
-    
-    try:
-        rider_profile = Rider.objects.get(user=request.user)
-    except Rider.DoesNotExist:
-        rider_profile = None
 
     try:
         rider_profile = Rider.objects.get(user=request.user)
@@ -179,10 +182,21 @@ def rider_dashboard(request):
     )
     total_miles = sum(ride.distance_km for ride in completed_rides if ride.distance_km)  
 
-    recent_rides = RideRequest.objects.filter(
+    
+    recent_rides_list = RideRequest.objects.filter(
         passenger=request.user,
         status='completed'
-    ).order_by('-completed_at')[:5].select_related('driver')
+    ).order_by('-completed_at').select_related('driver')
+    
+    paginator = Paginator(recent_rides_list, 5)  
+    page = request.GET.get('page')
+    
+    try:
+        recent_rides = paginator.page(page)
+    except PageNotAnInteger:
+        recent_rides = paginator.page(1)
+    except EmptyPage:
+        recent_rides = paginator.page(paginator.num_pages)
 
     notification_count = Notification.objects.filter(
         user=request.user,
@@ -238,6 +252,8 @@ def request_ride(request):
             status='pending'
         )
         
+        request.session['current_ride_id'] = ride.id
+        request.session.modified = True  
         
         # Notify drivers
         channel_layer = get_channel_layer()
@@ -281,6 +297,11 @@ def cancel_ride(request, ride_id):
         ride.status = 'cancelled'
         ride.cancelled_at = timezone.now()
         ride.save()
+
+        clear_ride_session(request)
+
+        if 'current_ride_id' in request.session:
+            del request.session['current_ride_id']
         
         # Notify both rider and driver via WebSocket
         channel_layer = get_channel_layer()
@@ -332,13 +353,13 @@ def driver_dashboard(request):
     if not hasattr(request.user, 'driver'):
         return redirect('home')
 
-    # Get active ride if exists
+    
     active_ride = RideRequest.objects.filter(
         driver=request.user,
         status__in=['accepted', 'started']
     ).order_by('-accepted_at').first()
     
-    # Get available rides if no active ride
+    
     available_rides = None
     if not active_ride:
         available_rides = RideRequest.objects.filter(
@@ -346,23 +367,43 @@ def driver_dashboard(request):
             driver__isnull=True
         ).order_by('-requested_at')
     
+    
+    completed_rides = RideRequest.objects.filter(
+        driver=request.user,
+        status='completed'
+    ).order_by('-completed_at')[:10]  
+    
+    
+    
+        
+    
     context = {
         'active_ride': active_ride,
         'available_rides': available_rides,
+        'completed_rides': completed_rides,
         'is_driver': True
     }
     return render(request, 'driver-dashboard.html', context)
 
 @login_required
 def pending_rides(request):
-    rides = RideRequest.objects.filter(
+    page = request.GET.get('page', 1)
+    rides_list = RideRequest.objects.filter(
         status='pending',
         driver__isnull=True
-    ).select_related('passenger').order_by('-requested_at')[:20]
+    ).select_related('passenger').order_by('-requested_at')
+    
+    paginator = Paginator(rides_list, 4)  
+    
+    try:
+        rides = paginator.page(page)
+    except PageNotAnInteger:
+        rides = paginator.page(1)
+    except EmptyPage:
+        rides = paginator.page(paginator.num_pages)
+    
     for ride in rides:
-        
         phone_number = ride.passenger.rider.phone_number if hasattr(ride.passenger, 'rider') else "No phone number"
-        
     
     html = render_to_string('partials/_pending_rides.html', {
         'pending_rides': rides,
@@ -372,12 +413,20 @@ def pending_rides(request):
 
 @login_required
 def accepted_rides(request):
-
-    rides = RideRequest.objects.filter(
+    page = request.GET.get('page', 1)
+    rides_list = RideRequest.objects.filter(
         driver=request.user,
         status='accepted'
-    ).select_related('passenger__rider').order_by('-accepted_at')[:20]
-
+    ).select_related('passenger__rider').order_by('-accepted_at')
+    
+    paginator = Paginator(rides_list, 1)
+    
+    try:
+        rides = paginator.page(page)
+    except PageNotAnInteger:
+        rides = paginator.page(1)
+    except EmptyPage:
+        rides = paginator.page(paginator.num_pages)
     
     html = render_to_string('partials/_accepted_rides.html', {
         'accepted_rides': rides,
@@ -387,10 +436,20 @@ def accepted_rides(request):
 
 @login_required
 def active_rides(request):
-    rides = RideRequest.objects.filter(
+    page = request.GET.get('page', 1)
+    rides_list = RideRequest.objects.filter(
         driver=request.user,
         status='started'
     ).select_related('passenger__rider').order_by('-started_at')
+    
+    paginator = Paginator(rides_list, 10)
+    
+    try:
+        rides = paginator.page(page)
+    except PageNotAnInteger:
+        rides = paginator.page(1)
+    except EmptyPage:
+        rides = paginator.page(paginator.num_pages)
     
     html = render_to_string('partials/_active_rides.html', {
         'active_rides': rides,
@@ -401,10 +460,20 @@ def active_rides(request):
 @login_required(login_url='home')
 def completed_trips(request):
     try:
-        rides = RideRequest.objects.filter(
+        page = request.GET.get('page', 1)
+        rides_list = RideRequest.objects.filter(
             driver=request.user,
             status='completed'
         ).order_by('-completed_at')
+        
+        paginator = Paginator(rides_list, 10)
+        
+        try:
+            rides = paginator.page(page)
+        except PageNotAnInteger:
+            rides = paginator.page(1)
+        except EmptyPage:
+            rides = paginator.page(paginator.num_pages)
         
         html = render_to_string('partials/_completed_rides.html', {
             'completed_rides': rides,
@@ -420,6 +489,43 @@ def completed_trips(request):
             'details': str(e)
         }, status=500)
 
+
+def update_ride_session(request, ride_id, status):
+    """Helper function to update ride session consistently"""
+    try:
+        ride = RideRequest.objects.get(id=ride_id)
+        
+        # Always update these three session variables
+        request.session['current_ride_id'] = str(ride_id)
+        request.session['current_ride_status'] = str(status)
+        
+        # Store fare for completed rides
+        if status == 'completed':
+            request.session['completed_ride_fare'] = float(ride.total_fare) if ride.total_fare else 0
+        
+        # Store driver info if available
+        if hasattr(ride, 'driver') and ride.driver:
+            request.session['current_driver'] = {
+                'name': ride.driver.get_full_name(),
+                'car_model': getattr(ride.driver.driver, 'vehicle_model', ''),
+                'license_plate': getattr(ride.driver.driver, 'license_plate', ''),
+            }
+        
+        request.session.modified = True
+        print(f"[SESSION] Updated - Ride: {ride_id}, Status: {status}")
+        return True
+    except Exception as e:
+        print(f"[SESSION] Error updating session: {e}")
+        return False
+
+def clear_ride_session(request):
+    """Clear ride session data"""
+    keys_to_remove = ['current_ride_id', 'current_ride_status', 'completed_ride_fare', 'current_driver']
+    for key in keys_to_remove:
+        request.session.pop(key, None)
+    request.session.modified = True
+    print("[SESSION] Cleared ride session")
+
 @csrf_exempt
 def accept_ride(request, ride_id):
     if request.method == 'POST':
@@ -430,7 +536,7 @@ def accept_ride(request, ride_id):
             ride.accepted_at = timezone.now()
             ride.save()
 
-            # Prepare ride data for broadcast
+            
             ride_data = {
                 'id': ride.id,
                 'fare': ride.total_fare,
@@ -444,10 +550,13 @@ def accept_ride(request, ride_id):
                 'requested_at': ride.requested_at,
             }
 
-            # Serialize safely before sending to channel layer
+            if not update_ride_session(request, ride_id, 'accepted'):
+                return JsonResponse({'status': 'error', 'message': 'Failed to update session'}, status=500)
+
+            
             ride_payload = json.loads(json.dumps(ride_data, cls=DjangoSafeJSONEncoder))
 
-            # WebSocket broadcast
+            
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 f"driver_{request.user.id}",
@@ -523,6 +632,9 @@ def start_trip(request, ride_id):
                 'rating': 0,
             }
         }
+
+        if not update_ride_session(request, ride_id, 'started'):
+            return JsonResponse({'status': 'error', 'message': 'Failed to update session'}, status=500)
 
         # Serialize safely
         ride_payload = json.loads(json.dumps(ride_data, cls=DjangoSafeJSONEncoder))
@@ -603,7 +715,11 @@ def complete_trip(request, ride_id):
         
         ride.status = 'completed'
         ride.completed_at = timezone.now()
+        ride.payment_status = 'pending'
         ride.save()
+
+        if not update_ride_session(request, ride_id, 'completed'):
+            return JsonResponse({'status': 'error', 'message': 'Failed to update session'}, status=500)
         
         
         ride.refresh_from_db()
@@ -612,6 +728,7 @@ def complete_trip(request, ride_id):
         ride_data = {
             'id': ride.id,
             'status': ride.status,
+            'fare': float(ride.total_fare) if ride.total_fare else 0,
             'started_at': ride.started_at.isoformat() if ride.started_at else None,
             'pickup': ride.current_location,
             'dropoff': ride.destination,
@@ -635,12 +752,14 @@ def complete_trip(request, ride_id):
 
         
         ride_payload = json.loads(json.dumps(ride_data, cls=DjangoSafeJSONEncoder))
+
+        payment_url = create_paystack_payment_link(ride)
         
 
         channel_layer = get_channel_layer()
         
         
-        # Notify passenger (through ride-specific group)
+        
         try:
             async_to_sync(channel_layer.group_send)(
                 f"ride_{ride.id}",
@@ -701,6 +820,278 @@ def complete_trip(request, ride_id):
             'error': str(e)
         }, status=500)
 
+@csrf_exempt
+def initiate_payment(request, ride_id):
+    print(f"=== INITIATE PAYMENT CALLED ===")
+    print(f"Ride ID: {ride_id}, User: {request.user.username}")
+    
+    if request.method != 'POST':
+        print("❌ ERROR: Method not allowed - expected POST")
+        return JsonResponse({'status': 'error', 'error': 'Method not allowed'}, status=405)
+    
+    try:
+        ride = RideRequest.objects.get(id=ride_id, passenger=request.user)
+        print(f"✅ Ride found: ID={ride.id}, Status={ride.status}, Payment Status={ride.payment_status}")
+        print(f"💰 Fare: {ride.total_fare}, Passenger: {ride.passenger.username}")
+        
+        # Get passenger email
+        try:
+            rider_profile = Rider.objects.get(user=ride.passenger)
+            passenger_email = rider_profile.email
+            print(f"📧 Email from Rider model: {passenger_email}")
+        except Rider.DoesNotExist:
+            passenger_email = ride.passenger.email
+            print(f"📧 Email from User model: {passenger_email}")
+        
+        # Validate ride status
+        if ride.status != 'completed':
+            print(f"❌ Ride not completed. Current status: {ride.status}")
+            return JsonResponse({
+                'status': 'error', 
+                'error': f'Ride must be completed before payment. Current status: {ride.status}'
+            }, status=400)
+        
+        # Check if already paid
+        if ride.payment_status == 'paid':
+            print("❌ Payment already completed")
+            return JsonResponse({
+                'status': 'error', 
+                'error': 'Payment already completed'
+            }, status=400)
+        
+        # Validate fare amount
+        if not ride.total_fare or ride.total_fare <= 0:
+            print(f"❌ Invalid fare amount: {ride.total_fare}")
+            return JsonResponse({
+                'status': 'error',
+                'error': f'Invalid fare amount: {ride.total_fare}'
+            }, status=400)
+        
+        # Validate email
+        if not passenger_email or '@' not in passenger_email:
+            print(f"❌ Invalid email: {passenger_email}")
+            return JsonResponse({
+                'status': 'error',
+                'error': 'Passenger email is required for payment. Please update your profile with a valid email address.'
+            }, status=400)
+        
+        print("🔄 Creating Paystack payment link...")
+        payment_url = create_paystack_payment_link(ride)
+        
+        if payment_url:
+            print(f"✅ Payment link created successfully: {payment_url[:50]}...")
+            return JsonResponse({
+                'status': 'success',
+                'payment_url': payment_url,
+                'ride_id': ride.id
+            })
+        else:
+            print("❌ Failed to create payment link")
+            return JsonResponse({
+                'status': 'error',
+                'error': 'Failed to create payment link. Please try again.'
+            }, status=500)
+            
+    except RideRequest.DoesNotExist:
+        print(f"❌ Ride not found: ID={ride_id}, User={request.user.username}")
+        return JsonResponse({
+            'status': 'error',
+            'error': 'Ride not found or you are not authorized to pay for this ride'
+        }, status=404)
+    except Exception as e:
+        print(f"❌ Unexpected error in initiate_payment: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({
+            'status': 'error',
+            'error': 'Internal server error'
+        }, status=500)
+
+import time
+import random
+
+def create_paystack_payment_link(ride):
+    print(f"=== CREATE PAYSTACK PAYMENT LINK ===")
+    try:
+        # Get passenger email
+        try:
+            rider_profile = Rider.objects.get(user=ride.passenger)
+            passenger_email = rider_profile.email
+            print(f"📧 Using Rider model email: {passenger_email}")
+        except Rider.DoesNotExist:
+            passenger_email = ride.passenger.email
+            print(f"📧 Using User model email: {passenger_email}")
+        
+        # Validate email
+        if not passenger_email:
+            print("❌ ERROR: No email found for passenger")
+            return None
+        
+        # Prepare payment data with UNIQUE reference
+        amount_in_kobo = int(ride.total_fare * 100)
+        print(f"💰 Amount: {ride.total_fare} Naira -> {amount_in_kobo} kobo")
+        
+        # Generate unique reference (multiple options)
+        timestamp = int(time.time())
+        random_suffix = random.randint(1000, 9999)
+        unique_reference = f"RIDE_{ride.id}_{timestamp}_{random_suffix}"
+        
+        # Alternative simpler unique reference:
+        # unique_reference = f"RIDE_{ride.id}_{timestamp}"
+        
+        payment_data = {
+            'email': passenger_email,
+            'amount': amount_in_kobo,
+            'reference': unique_reference,  # Use unique reference
+            'callback_url': f"{settings.BASE_URL}/payment/success/{ride.id}/",
+            'metadata': {
+                'ride_id': ride.id,
+                'passenger_id': ride.passenger.id,
+                'driver_id': ride.driver.id if ride.driver else None
+            }
+        }
+        
+        print(f"📦 Payment data: {payment_data}")
+        print(f"🔑 Unique Reference: {unique_reference}")
+        
+        # Make Paystack API call
+        print("🔄 Calling Paystack API...")
+        response = requests.post(
+            'https://api.paystack.co/transaction/initialize',
+            headers={'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}'},
+            json=payment_data,
+            timeout=30
+        )
+        
+        print(f"📡 Paystack Response Status: {response.status_code}")
+        print(f"📄 Paystack Response: {response.text}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"✅ Paystack API success - Status: {data.get('status')}")
+            
+            if data.get('status') and data['data'].get('authorization_url'):
+                ride.payment_reference = unique_reference  # Save the unique reference
+                ride.save()
+                print(f"✅ Payment reference saved: {unique_reference}")
+                return data['data']['authorization_url']
+            else:
+                print(f"❌ Paystack API returned false status: {data}")
+                return None
+        else:
+            print(f"❌ Paystack HTTP error: {response.status_code}")
+            return None
+            
+    except Exception as e:
+        print(f"❌ Exception in create_paystack_payment_link: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+@csrf_exempt
+def payment_success(request, ride_id):
+    print(f"=== PAYMENT SUCCESS CALLED ===")
+    print(f"Ride ID: {ride_id}")
+    print(f"GET Parameters: {dict(request.GET)}")
+    
+    try:
+        ride = RideRequest.objects.get(id=ride_id)
+        print(f"✅ Ride found: {ride.id}, Status: {ride.status}, Payment Status: {ride.payment_status}")
+        print(f"💰 Total Fare: {ride.total_fare}, Passenger: {ride.passenger.username}")
+        
+        # Get reference from URL parameters (Paystack will send this back)
+        reference = request.GET.get('reference')
+        if not reference:
+            # Fallback to ride's payment reference
+            reference = ride.payment_reference
+            print(f"🔍 Using stored payment reference: {reference}")
+        else:
+            print(f"🔍 Using URL reference parameter: {reference}")
+        
+        if not reference:
+            print("❌ ERROR: No payment reference found")
+            return redirect('/rider-dashboard/?payment=failed&error=no_reference')
+        
+        print(f"🔄 Verifying payment with Paystack...")
+        response = requests.get(
+            f'https://api.paystack.co/transaction/verify/{reference}',
+            headers={'Authorization': f'Bearer {settings.PAYSTACK_SECRET_KEY}'}
+        )
+        
+        print(f"📡 Paystack Verification Response Status: {response.status_code}")
+        
+        if response.status_code == 200:
+            data = response.json()
+            print(f"📊 Paystack Verification Data: {data}")
+            
+            if data.get('status') and data['data'].get('status') == 'success':
+                print("✅ Paystack verification SUCCESS")
+                
+                # Update the ride's payment reference to match what was actually used
+                if reference != ride.payment_reference:
+                    print(f"🔄 Updating ride payment reference from {ride.payment_reference} to {reference}")
+                    ride.payment_reference = reference
+                
+                # Calculate driver earnings
+                driver_earnings = float(ride.total_fare) * 0.8 
+                print(f"💸 Driver earnings: {driver_earnings}")
+                
+                # Update ride payment status
+                ride.payment_status = 'paid'
+                ride.paid_at = timezone.now()
+                ride.save()
+                print("✅ Ride payment status updated to PAID")
+                
+                # Send WebSocket notifications
+                channel_layer = get_channel_layer()
+                
+                # Notify rider
+                async_to_sync(channel_layer.group_send)(
+                    f"ride_{ride.id}",
+                    {
+                        "type": "ride_update",
+                        "event": "payment_completed",
+                        "ride_id": ride.id,
+                        "message": "Payment completed! Thank you for your ride."
+                    }
+                )
+                print("✅ Rider WebSocket notification sent")
+                
+                # Notify driver
+                async_to_sync(channel_layer.group_send)(
+                    f"driver_{ride.driver.id}",
+                    {
+                        "type": "ride_update",
+                        "event": "payment_received", 
+                        "ride_id": ride.id,
+                        "message": "Rider payment completed!",
+                        "earnings": driver_earnings
+                    }
+                )
+                print("✅ Driver WebSocket notification sent")
+                
+                # Redirect with success
+                print("🔄 Redirecting to dashboard with success...")
+                return redirect(f'/rider-dashboard/?payment=success&amount={ride.total_fare}&ride_id={ride.id}')
+            else:
+                paystack_status = data.get('data', {}).get('status', 'unknown')
+                print(f"❌ Paystack verification FAILED - Status: {paystack_status}")
+                return redirect(f'/rider-dashboard/?payment=failed&error=paystack_failed&status={paystack_status}')
+        else:
+            print(f"❌ Paystack HTTP ERROR - Status: {response.status_code}")
+            return redirect(f'/rider-dashboard/?payment=failed&error=http_error&status={response.status_code}')
+    
+    except RideRequest.DoesNotExist:
+        print(f"❌ ERROR: Ride with ID {ride_id} does not exist")
+        return redirect('/rider-dashboard/?payment=failed&error=ride_not_found')
+    
+    except Exception as e:
+        print(f"❌ UNEXPECTED ERROR in payment_success: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return redirect(f'/rider-dashboard/?payment=failed&error=unexpected&message={str(e)}')
+
+
 
 
 
@@ -713,17 +1104,17 @@ def driver_profile(request):
     driver = request.user.driver
     
     
-    today = timezone.now().date()
-    completed_trips = RideRequest.objects.filter(
+    
+    completed_rides = RideRequest.objects.filter(
         driver=request.user,
         status='completed'
-    ).count()
+    )
     
-    today_earnings = RideRequest.objects.filter(
-        driver=request.user,
-        status='completed',
-        completed_at__date=today
-    ).aggregate(total=Sum('total_fare'))['total'] or 0
+    
+    total_earnings = sum(ride.driver_earnings for ride in completed_rides)
+    
+    
+    completed_trips = completed_rides.count()
     
     
     
@@ -742,7 +1133,7 @@ def driver_profile(request):
                 
             },
             'stats': {
-                'today_earnings': today_earnings,
+                'total_earnings': total_earnings,
                 'completed_trips': completed_trips,
                 'rating': float(driver.rating) if driver.rating else 4.5,
                 'online_hours': "5h 42m"  
@@ -854,7 +1245,7 @@ def become_a_driver(request):
                     email=form.cleaned_data['email'],
                     password=form.cleaned_data['password'],          
                 )         
-                Driver.objects.create(
+                driver = Driver.objects.create(
                     user=user,
                     full_name=form.cleaned_data['full_name'],
                     phone_number=form.cleaned_data['phone_number'],
@@ -871,8 +1262,12 @@ def become_a_driver(request):
                     bank_name=form.cleaned_data['bank_name'],
                     account_number=form.cleaned_data['account_number'],
                     account_holder_name=form.cleaned_data['account_holder_name'],
-                    is_approved=False
+                    is_approved=False,
+                    latitude=form.cleaned_data.get('latitude'),
+                    longitude=form.cleaned_data.get('longitude'),
+                    current_address=form.cleaned_data.get('current_address', '')
                 )
+                
                 messages.success(request, 'Registration successful! Awaiting admin approval.')
                 return redirect('signin')
             except Exception as e:

@@ -211,22 +211,26 @@
                   </div>
 
                   <div class="form-section">
-                    <h3>Current Location</h3>
+                    <h3>Current Location <span class="required-field">(Required)</span></h3>
                     <div class="form-grid">
                         <div class="form-group full-width">
-                            <label>Detect Your Current Location</label>
+                            <label class="required-field">Detect Your Current Location</label>
                             <div class="location-section">
                                 <button type="button" id="detect-location" class="location-btn">
                                     <i class="fas fa-location-crosshairs"></i>
                                     Detect My Location
                                 </button>
-                                <div id="location-status" class="location-status">
-                                    Location not detected yet
+                                <div id="location-status" class="location-status warning">
+                                    ⚠️ Location detection required for registration
                                 </div>
                                 <div id="location-details" class="location-details" style="display: none;">
-                                    <p><strong>Address:</strong> <span id="location-address">-</span></p>
-                                    <p><strong>Coordinates:</strong> <span id="location-coords">-</span></p>
+                                    <p><strong>📍 Address:</strong> <span id="location-address">-</span></p>
+                                    <p><strong>🌐 Coordinates:</strong> <span id="location-coords">-</span></p>
                                 </div>
+                                <small class="form-text text-muted">
+                                    We need your current location to match you with nearby riders. 
+                                    Your location data is secure and only used for ride matching.
+                                </small>
                             </div>
                             
                             <!-- Hidden fields to store location data -->
@@ -281,7 +285,82 @@
               width: 100%;
               max-width: 900px;
           }
-      
+          .location-section {
+            border: 2px solid #e9ecef;
+            padding: 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            margin-bottom: 20px;
+        }
+        
+        .location-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .location-btn:hover:not(:disabled) {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .location-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .location-status {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .location-details {
+            margin-top: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #28a745;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .success { 
+            color: #155724; 
+            background: #d4edda; 
+            border-left: 4px solid #28a745;
+        }
+        
+        .error { 
+            color: #721c24; 
+            background: #f8d7da; 
+            border-left: 4px solid #dc3545;
+        }
+        
+        .warning { 
+            color: #856404; 
+            background: #fff3cd; 
+            border-left: 4px solid #ffc107;
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            background: #6c757d;
+        }
+        
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
+        }
           .signup-container h2 {
               font-size: 2rem;
               color: #333;
@@ -447,6 +526,11 @@
         const latitudeField = document.querySelector('#id_latitude');
         const longitudeField = document.querySelector('#id_longitude');
         const addressField = document.querySelector('#id_current_address');
+        const submitBtn = document.querySelector('.submit-btn');
+    
+        // Make location required
+        let locationDetected = false;
+        updateSubmitButton();
     
         detectBtn.addEventListener('click', function() {
             detectBtn.disabled = true;
@@ -471,21 +555,25 @@
                     // Show coordinates
                     locationCoords.textContent = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
                     
-                    // Try to get address from coordinates
+                    // Try to get address from coordinates using multiple services
                     try {
                         const address = await getAddressFromCoords(lat, lng);
                         locationAddress.textContent = address;
                         addressField.value = address;
                     } catch (error) {
-                        locationAddress.textContent = 'Address not available';
-                        addressField.value = `Coordinates: ${lat}, ${lng}`;
+                        // If address lookup fails, create a descriptive address from coordinates
+                        const descriptiveAddress = `Location at ${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+                        locationAddress.textContent = descriptiveAddress;
+                        addressField.value = descriptiveAddress;
                     }
                     
-                    // Show success
+                    // Show success and enable form
                     locationStatus.textContent = 'Location detected successfully!';
                     locationStatus.className = 'location-status success';
                     locationDetails.style.display = 'block';
                     detectBtn.disabled = false;
+                    locationDetected = true;
+                    updateSubmitButton();
                 },
                 // Error callback
                 function(error) {
@@ -508,11 +596,11 @@
                     
                     showLocationError(errorMessage);
                 },
-                // Options
+                // Options - more aggressive for better accuracy
                 {
                     enableHighAccuracy: true,
-                    timeout: 10000,
-                    maximumAge: 60000
+                    timeout: 15000,
+                    maximumAge: 0
                 }
             );
         });
@@ -521,27 +609,94 @@
             locationStatus.textContent = message;
             locationStatus.className = 'location-status error';
             detectBtn.disabled = false;
+            locationDetected = false;
+            updateSubmitButton();
         }
     
         async function getAddressFromCoords(lat, lng) {
-            // Using OpenStreetMap Nominatim (free, no API key required)
-            const response = await fetch(
-                `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-            );
+            // Try multiple geocoding services for better reliability
             
-            if (!response.ok) {
-                throw new Error('Failed to get address');
+            // First try: OpenStreetMap Nominatim
+            try {
+                const response = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+                );
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.display_name && data.display_name !== '') {
+                        return data.display_name;
+                    }
+                }
+            } catch (error) {
+                console.log('OpenStreetMap geocoding failed, trying fallback...');
             }
             
-            const data = await response.json();
-            return data.display_name || 'Address not available';
+            // Fallback: Use Google Maps Geocoding API (if you have API key)
+            const googleApiKey = '{{ GOOGLE_MAPS_API_KEY }}'; // You'll need to pass this from Django
+            if (googleApiKey && googleApiKey !== '{{ GOOGLE_MAPS_API_KEY }}') {
+                try {
+                    const response = await fetch(
+                        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${googleApiKey}`
+                    );
+                    
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.status === 'OK' && data.results.length > 0) {
+                            return data.results[0].formatted_address;
+                        }
+                    }
+                } catch (error) {
+                    console.log('Google Geocoding failed');
+                }
+            }
+            
+            // Final fallback: Create descriptive address from coordinates
+            throw new Error('Could not retrieve address from coordinates');
         }
     
-        // Optional: Auto-detect location when page loads
-        // detectBtn.click();
+        function updateSubmitButton() {
+            if (submitBtn) {
+                if (!locationDetected) {
+                    submitBtn.disabled = true;
+                    submitBtn.title = 'Please detect your location first';
+                    submitBtn.style.opacity = '0.6';
+                    submitBtn.style.cursor = 'not-allowed';
+                } else {
+                    submitBtn.disabled = false;
+                    submitBtn.title = '';
+                    submitBtn.style.opacity = '1';
+                    submitBtn.style.cursor = 'pointer';
+                }
+            }
+        }
+    
+        // Add form validation
+        const form = document.querySelector('.signup-form');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                if (!locationDetected) {
+                    e.preventDefault();
+                    showLocationError('Location detection is required. Please detect your location before submitting.');
+                    detectBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Add visual emphasis to location section
+                    const locationSection = document.querySelector('.form-section:nth-child(2)');
+                    locationSection.style.border = '2px solid #dc3545';
+                    locationSection.style.backgroundColor = '#fff5f5';
+                    
+                    setTimeout(() => {
+                        locationSection.style.border = '';
+                        locationSection.style.backgroundColor = '';
+                    }, 3000);
+                }
+            });
+        }
+    
+        // Auto-detect location when page loads (optional)
+        // setTimeout(() => detectBtn.click(), 1000);
     });
     </script>
-    
 
   <!-- Vendor JS Files -->
   <script src="{% static 'assets/vendor/bootstrap/js/bootstrap.bundle.min.js' %}"></script>

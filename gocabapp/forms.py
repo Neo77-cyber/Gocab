@@ -48,9 +48,9 @@ class DriverRegistrationForm(forms.Form):
 )
     account_holder_name = forms.CharField(max_length=255)
 
-    latitude = forms.FloatField(required=False, widget=forms.HiddenInput())
-    longitude = forms.FloatField(required=False, widget=forms.HiddenInput())
-    current_address = forms.CharField(required=False, widget=forms.HiddenInput())
+    latitude = forms.FloatField(required=True, widget=forms.HiddenInput())
+    longitude = forms.FloatField(required=True, widget=forms.HiddenInput())
+    current_address = forms.CharField(required=True, widget=forms.HiddenInput())
     
     def clean(self):
         cleaned_data = super().clean()
@@ -88,6 +88,16 @@ class DriverRegistrationForm(forms.Form):
         if Driver.objects.filter(phone_number=phone_number).exists():
             raise ValidationError("This phone number is already registered")
         return phone_number
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        latitude = cleaned_data.get('latitude')
+        longitude = cleaned_data.get('longitude')
+        
+        if not latitude or not longitude:
+            raise ValidationError("Location detection is required. Please detect your current location.")
+        
+        return cleaned_data
 
 
 

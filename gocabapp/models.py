@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
-
+from django.utils import timezone
 # Create your models here.
 
 
@@ -45,6 +45,24 @@ class Driver(models.Model):
     def __str__(self):
         return self.user.username
     
+    def get_location(self):
+        """Return location as tuple (lat, lng)"""
+        if self.latitude and self.longitude:
+            return (self.latitude, self.longitude)
+        return None
+
+    def update_location(self, latitude, longitude, address=None):
+        """Update driver's location"""
+        self.latitude = latitude
+        self.longitude = longitude
+        if address:
+            self.current_address = address
+        self.location_updated_at = timezone.now()
+        self.save()
+
+
+
+    
 
 
 
@@ -59,6 +77,13 @@ class RideRequest(models.Model):
     ('completed', 'Completed'), 
     ('cancelled', 'Cancelled'),
 ]
+    
+    PAYMENT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('paid', 'Paid'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ]
 
     passenger = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ride_requests')
     driver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ride_requests_as_driver')
@@ -69,6 +94,9 @@ class RideRequest(models.Model):
     dropoff_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     dropoff_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
+    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='pending')
+    payment_reference = models.CharField(max_length=255, null=True, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
     started_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     requested_at = models.DateTimeField(auto_now_add=True)
@@ -84,6 +112,42 @@ class RideRequest(models.Model):
 
     def __str__(self):
         return f"Request by {self.passenger.username} from {self.current_location} to {self.destination}"
+    
+    def is_paid(self):
+        return self.payment_status == 'paid'
+    
+    def mark_as_paid(self, reference):
+        self.payment_status = 'paid'
+        self.payment_reference = reference
+        self.paid_at = timezone.now()
+        self.save()
+
+    @property
+    def driver_earnings(self):
+        if self.total_fare:
+            return float(self.total_fare) * 0.8
+        return 0.0
+
+
+class DriverPayout(models.Model):
+    PAYOUT_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('paid', 'Paid'),
+        ('failed', 'Failed'),
+    ]
+
+    driver = models.ForeignKey(Driver, on_delete=models.CASCADE)
+    ride = models.ForeignKey(RideRequest, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)  
+    platform_fee = models.DecimalField(max_digits=10, decimal_places=2)  
+    status = models.CharField(max_length=20, choices=PAYOUT_STATUS_CHOICES, default='pending')
+    paystack_reference = models.CharField(max_length=100, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.driver.full_name} - ₦{self.amount} - {self.status}"
 
 class Trip(models.Model):
     STATUS_CHOICES = [

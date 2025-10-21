@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-p1f4uim8(v93tcx_orusm)mrjc9no#^_&0z!ts7%c5x)o82v(m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['gocab.onrender.com']
+ALLOWED_HOSTS = ['*', 'gocab.onrender.com']
 
 
 # Application definition
@@ -89,6 +89,11 @@ DATABASES = {
 APPEND_SLASH = False
 
 GOOGLE_MAPS_API_KEY = 'AIzaSyAUMHV6_Zn7ThpeGbl8qC6gMmfvxKU7IgI'
+
+BASE_URL = 'http://127.0.0.1:8000'
+
+PAYSTACK_SECRET_KEY = 'sk_test_42dbf6af66f642383ddd827ac329afd1faf0face'  
+PAYSTACK_PUBLIC_KEY = 'pk_test_252ae2856d408a869bed1862049a4885ff9fe8ba'  
 
 
 

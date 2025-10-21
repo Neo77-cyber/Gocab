@@ -547,3 +547,33 @@
     <p>No new ride requests</p>
 </div>
 {% endfor %}
+
+{% if pending_rides.has_other_pages %}
+<div class="pagination" id="pendingRidesPagination">
+    {% if pending_rides.has_previous %}
+        <button class="page-link" data-page="{{ pending_rides.previous_page_number }}" data-action="pending">
+            <i class="fas fa-chevron-left"></i> Previous
+        </button>
+    {% endif %}
+    
+    <div class="page-numbers">
+        {% for num in pending_rides.paginator.page_range %}
+            {% if pending_rides.number == num %}
+                <span class="page-link current">{{ num }}</span>
+            {% elif num > pending_rides.number|add:'-3' and num < pending_rides.number|add:'3' %}
+                <button class="page-link" data-page="{{ num }}" data-action="pending">{{ num }}</button>
+            {% endif %}
+        {% endfor %}
+    </div>
+    
+    {% if pending_rides.has_next %}
+        <button class="page-link" data-page="{{ pending_rides.next_page_number }}" data-action="pending">
+            Next <i class="fas fa-chevron-right"></i>
+        </button>
+    {% endif %}
+</div>
+
+<div class="pagination-info">
+    Showing {{ pending_rides.start_index }}-{{ pending_rides.end_index }} of {{ pending_rides.paginator.count }} pending rides
+</div>
+{% endif %}

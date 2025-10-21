@@ -24,6 +24,8 @@ urlpatterns = [
     path('driver/accepted-rides/', views.accepted_rides, name='accepted_rides'), 
     path('driver/active-rides/', views.active_rides, name='active_rides'),
     path('driver/cancel-ride/<int:ride_id>/', views.cancel_ride, name='cancel_ride'),
+    path('initiate-payment/<int:ride_id>/', views.initiate_payment, name='initiate_payment'),
+    path('payment/success/<int:ride_id>/', views.payment_success, name='payment_success'),
     path('logout', views.logout, name = 'logout'),
 
 

@@ -1156,6 +1156,169 @@
   align-items: center;
   gap: 15px;
 }
+/* Trip Completed State */
+.trip-completed-state {
+  text-align: center;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 10px;
+  margin: 15px 0;
+}
+
+.completion-icon {
+  font-size: 3rem;
+  color: #28a745;
+  margin-bottom: 15px;
+}
+
+.completion-details h3 {
+  color: #28a745;
+  margin-bottom: 15px;
+}
+
+.fare-amount {
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  margin: 15px 0;
+  border: 2px solid #e9ecef;
+}
+
+.fare-label {
+  font-weight: 600;
+  color: #6c757d;
+}
+
+.fare-value {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #28a745;
+  display: block;
+  margin-top: 5px;
+}
+
+.driver-info-completed {
+  text-align: left;
+  background: white;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.driver-info-completed p {
+  margin: 8px 0;
+  color: #495057;
+}
+
+/* Pay Now Button */
+.pay-now-btn {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  border: none;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.pay-now-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+}
+
+.payment-processing-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: not-allowed;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.payment-completed-state {
+  background: #d4edda;
+  color: #155724;
+  padding: 15px 25px;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid #c3e6cb;
+}
+
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 15px 0;
+  border-top: 1px solid #eee;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 8px;
+}
+
+.page-link {
+  padding: 8px 16px;
+  border: 1px solid #ddd;
+  background: white;
+  color: #333;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.page-link:hover {
+  background: #08915E;
+  color: white;
+  border-color: #08915E;
+}
+
+.page-link.current {
+  background: #08915E;
+  color: white;
+  border-color:#08915E;
+}
+
+.pagination-info {
+  text-align: center;
+  color: #666;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+/* Remove the old View All button since we have pagination */
+.view-all-btn {
+  display: none;
+}
+
+/* Hide cancel button when trip is completed */
+.trip-completed-state ~ .tracking-actions .cancel-ride-btn {
+  display: none;
+}
 
 #searchingState i.fas {
   font-size: 3rem;
@@ -1221,6 +1384,160 @@
 #cancelRideBtn:active {
   transform: scale(0.98);
 }
+
+/* Payment Completed State */
+.payment-completed-state {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  min-width: 100px;
+  justify-content: center;
+  border: none;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.payment-completed-state i {
+  font-size: 16px;
+  color: #ffffff;
+}
+
+/* Payment Status Paid */
+.payment-status.paid {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  font-weight: 600;
+  font-size: 14px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.payment-status.paid i {
+  font-size: 16px;
+  color: #ffffff;
+}
+
+.payment-status.paid span {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Optional hover effect */
+.payment-status.paid:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  transition: all 0.2s ease;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .payment-status.paid {
+      padding: 6px 12px;
+      font-size: 13px;
+      gap: 6px;
+  }
+  
+  .payment-status.paid i {
+      font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-status.paid {
+      padding: 5px 10px;
+      font-size: 12px;
+      gap: 4px;
+  }
+  
+  .payment-status.paid i {
+      font-size: 12px;
+  }
+}
+
+.payment-completed-state span {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* Hover effect for subtle interaction */
+.payment-completed-state:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  transition: all 0.2s ease;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .payment-completed-state {
+      padding: 8px 14px;
+      font-size: 13px;
+      min-width: 90px;
+      gap: 6px;
+  }
+  
+  .payment-completed-state i {
+      font-size: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-completed-state {
+      padding: 6px 12px;
+      font-size: 12px;
+      min-width: 80px;
+      gap: 4px;
+  }
+  
+  .payment-completed-state i {
+      font-size: 12px;
+  }
+}
+
+/* Animation for smooth appearance */
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(5px) scale(0.95);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+  }
+}
+
+/* Optional: Add a subtle pulse animation for attention */
+@keyframes subtlePulse {
+  0%, 100% {
+      transform: scale(1);
+  }
+  50% {
+      transform: scale(1.02);
+  }
+}
+
+.payment-completed-state {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+/* Add this if you want a subtle continuous pulse */
+.payment-completed-state.pulse {
+  animation: fadeIn 0.3s ease-in-out, subtlePulse 2s ease-in-out infinite;
+}
+
+
 
 /* Animation for Searching State */
 @keyframes pulse {
@@ -1365,7 +1682,6 @@
               </div>
               <div class="status-text">
                   <h3 id="trackingStatus">Finding you a driver</h3>
-                  
               </div>
           </div>
           <div class="tracking-timer">
@@ -1392,20 +1708,57 @@
               </div>
           </div>
       </div>
-
+  
       <div id="driverAssignedState" class="driver-assigned-state" style="display:none;">
-        <div id="driverInfo">
-          <p>Driver: <span id="driverName"></span></p>
-          <p>Car: <span id="vehicleInfo"></span></p>
-        </div>
-        <p>ETA: <span id="estimatedArrival"></span></p>
+          <div id="driverInfo">
+              <p>Driver: <span id="driverName"></span></p>
+              <p>Car: <span id="vehicleInfo"></span></p>
+          </div>
+          <p>ETA: <span id="estimatedArrival"></span></p>
+      </div>
+  
+      <!-- TRIP COMPLETED STATE - Add this new section -->
+      <div id="tripCompletedState" class="trip-completed-state" style="display:none;">
+          <div class="completion-icon">
+              <i class="fas fa-check-circle"></i>
+          </div>
+          <div class="completion-details">
+              <h3>Trip Completed!</h3>
+              <div class="fare-amount">
+                  <span class="fare-label">Total Fare:</span>
+                  <span class="fare-value">₦<span id="completedFareAmount">0.00</span></span>
+              </div>
+              <div class="driver-info-completed">
+                  <p><strong>Driver:</strong> <span id="completedDriverName"></span></p>
+                  <p><strong>Car:</strong> <span id="completedVehicleInfo"></span></p>
+              </div>
+          </div>
       </div>
   
       <div class="tracking-actions">
+          <!-- Cancel Ride Button (shown during active ride) -->
           <button id="cancelRideBtn" class="cancel-ride-btn">
               <i class="fas fa-times"></i>
               Cancel Ride Request
           </button>
+  
+          <!-- Pay Now Button (shown after trip completion) -->
+          <button id="payNowBtn" class="pay-now-btn" style="display:none;">
+              <i class="fas fa-credit-card"></i>
+              Pay Now - ₦<span id="payNowAmount">0.00</span>
+          </button>
+  
+          <!-- Payment Processing (shown after clicking Pay Now) -->
+          <button id="paymentProcessingBtn" class="payment-processing-btn" style="display:none;" disabled>
+              <i class="fas fa-spinner fa-spin"></i>
+              Processing Payment...
+          </button>
+  
+          <!-- Payment Completed (shown after successful payment) -->
+          <div id="paymentCompletedState" class="payment-completed-state" style="display:none;">
+              <i class="fas fa-check-circle"></i>
+              <span>Payment Completed!</span>
+          </div>
       </div>
   </div>
       
@@ -1417,135 +1770,124 @@
     
     
    
-    <div class="card">
-      <div class="ride-history-section">
-        <h2 class="section-title">Your Ride History</h2>
-        
-        <div class="history-filters">
-            <button class="filter-btn active">All</button>
-            <button class="filter-btn">This Week</button>
-            <button class="filter-btn">This Month</button>
-            <button class="filter-btn">Past Year</button>
-        </div>
-        
-        <div class="ride-cards">
-            {% for ride in recent_rides %}
-            <!-- Ride Card -->
-            <div class="ride-card">
-                <div class="ride-header">
-                    <div class="ride-date">{{ ride.completed_at|date:"l, g:i A" }}</div>
-                    <div class="ride-price">₦{{ ride.total_fare|floatformat:2 }}</div>
-                </div>
-                
-                <div class="ride-route">
-                    <div class="location-pin start">
-                        <i class="fas fa-circle"></i>
-                        <div class="location-text">{{ ride.current_location|truncatechars:20 }}</div>
-                    </div>
-                    <div class="route-line"></div>
-                    <div class="location-pin end">
-                        <i class="fas fa-map-marker-alt"></i>
-                        <div class="location-text">{{ ride.destination|truncatechars:20 }}</div>
-                    </div>
-                </div>
-                
-                <div class="ride-footer">
-                    <div class="driver-info">
-                        <div class="driver-avatar">
-                            {{ ride.driver.get_full_name|default:ride.driver.username|slice:":2"|upper }}
-                        </div>
-                        <div class="driver-details">
-                            <div class="driver-name">{{ ride.driver.get_full_name|default:ride.driver.username }}</div>
-                            <div class="car-info">
-                                {% if ride.driver.driver.vehicle_model %}
-                                    {{ ride.driver.driver.vehicle_model }} • {{ ride.driver.driver.license_plate }}
-                                {% else %}
-                                    Vehicle info not available
-                                {% endif %}
-                            </div>
-                        </div>
-                    </div>
-                    <button class="action-btn">Details</button>
-                </div>
-            </div>
-            {% empty %}
-            <div class="no-rides">No recent rides found</div>
-            {% endfor %}
-        </div>
-        
-        {% if completed_rides.count > 5 %}
-        <button class="view-all-btn">View All Ride History</button>
-        {% endif %}
-    </div>
+  <div class="card">
+    <div class="ride-history-section">
+      <h2 class="section-title">Your Ride History</h2>
+      
+      <div class="history-filters">
+          <button class="filter-btn active">All</button>
+          <button class="filter-btn">This Week</button>
+          <button class="filter-btn">This Month</button>
+          <button class="filter-btn">Past Year</button>
       </div>
-      <div class="card">
-        <div class="profile-section">
-            <div class="profile-header">
-              <div class="profile-avatar">
-                {{ rider_profile.full_name|default:request.user.username|slice:":2"|upper }}
+      
+      <div class="ride-cards">
+          {% for ride in recent_rides %}
+          <!-- Ride Card -->
+          <div class="ride-card">
+              <div class="ride-header">
+                  <div class="ride-date">{{ ride.completed_at|date:"l, g:i A" }}</div>
+                  <div class="ride-price">₦{{ ride.total_fare|floatformat:2 }}</div>
               </div>
-              <div class="profile-info">
-                <h2 class="profile-name">
-                  {{ rider_profile.full_name|default:request.user.username }}
-                </h2>
-                <div class="profile-rating">
-                  <i class="fas fa-star"></i>
-                  <span>4.9</span>
-                  
-                </div>
+              
+              <div class="ride-route">
+                  <div class="location-pin start">
+                      <i class="fas fa-circle"></i>
+                      <div class="location-text">{{ ride.current_location|truncatechars:20 }}</div>
+                  </div>
+                  <div class="route-line"></div>
+                  <div class="location-pin end">
+                      <i class="fas fa-map-marker-alt"></i>
+                      <div class="location-text">{{ ride.destination|truncatechars:20 }}</div>
+                  </div>
               </div>
-              <button class="edit-profile-btn">
-                <i class="fas fa-pencil-alt"></i>
-              </button>
-            </div>
-          
-            <div class="profile-stats">
-              <div class="stat-item">
-                <div class="stat-value">{{ completed_rides }}</div>
-                <div class="stat-label">Total Rides</div>
+              
+              <div class="ride-footer">
+                  <div class="driver-info">
+                      <div class="driver-avatar">
+                          {{ ride.driver.get_full_name|default:ride.driver.username|slice:":2"|upper }}
+                      </div>
+                      <div class="driver-details">
+                          <div class="driver-name">{{ ride.driver.get_full_name|default:ride.driver.username }}</div>
+                          <div class="car-info">
+                              {% if ride.driver.driver.vehicle_model %}
+                                  {{ ride.driver.driver.vehicle_model }} • {{ ride.driver.driver.license_plate }}
+                              {% else %}
+                                  Vehicle info not available
+                              {% endif %}
+                          </div>
+                      </div>
+                  </div>
+                  <button class="action-btn">Details</button>
               </div>
-              <div class="stat-item">
-                <div class="stat-value">92%</div>
-                <div class="stat-label">Success Rate</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value">{{ total_miles }}</div>
-                <div class="stat-label">Km Traveled</div>
-              </div>
-            </div>
-          
-            <div class="profile-details">
-              <div class="detail-item">
-                <i class="fas fa-envelope"></i>
-                <span>{{ rider_profile.email|default:request.user.email }}</span>
-              </div>
-              <div class="detail-item">
-                <i class="fas fa-phone"></i>
-                <span>{{ rider_profile.phone_number|default:"Not provided" }}</span>
-              </div>
-              <div class="detail-item">
-                <i class="fas fa-map-marker-alt"></i>
-                <span>{{ address }}</span>
-              </div>
-              <div class="detail-item">
-                <i class="fas fa-calendar-alt"></i>
-                <span>Member since {{ member_since }}</span>
-              </div>
-            </div>
-          
-            <div class="profile-actions">
-              <button class="action-btn primary">
-                <i class="fas fa-car"></i>
-                <span>Ride Preferences</span>
-              </button>
-              <button class="action-btn secondary">
-                <i class="fas fa-shield-alt"></i>
-                <span>Safety Center</span>
-              </button>
-            </div>
           </div>
 
+          <!-- Payment Status Section -->
+          <div class="payment-section">
+            {% if ride.payment_status == 'paid' %}
+            <div class="payment-status paid">
+                <i class="fas fa-check-circle"></i>
+                <span>Paid</span>
+            </div>
+            {% else %}
+            <div class="payment-actions">
+                <button class="pay-now-btn" data-ride-id="{{ ride.id }}" data-amount="{{ ride.total_fare }}">
+                    <i class="fas fa-credit-card"></i>
+                    Pay ₦{{ ride.total_fare|floatformat:2 }}
+                </button>
+                
+                <button class="payment-processing-btn" style="display:none;" disabled>
+                    <i class="fas fa-spinner fa-spin"></i>
+                    Processing...
+                </button>
+                
+                <div class="payment-completed-state" style="display:none;">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Paid</span>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+          {% empty %}
+          <div class="no-rides">No recent rides found</div>
+          {% endfor %}
       </div>
+      
+      <!-- Pagination -->
+      {% if recent_rides.has_other_pages %}
+      <div class="pagination">
+          {% if recent_rides.has_previous %}
+              <a href="?page={{ recent_rides.previous_page_number }}" class="page-link">
+                  <i class="fas fa-chevron-left"></i> Previous
+              </a>
+          {% endif %}
+          
+          <div class="page-numbers">
+              {% for num in recent_rides.paginator.page_range %}
+                  {% if recent_rides.number == num %}
+                      <span class="page-link current">{{ num }}</span>
+                  {% elif num > recent_rides.number|add:'-3' and num < recent_rides.number|add:'3' %}
+                      <a href="?page={{ num }}" class="page-link">{{ num }}</a>
+                  {% endif %}
+              {% endfor %}
+          </div>
+          
+          {% if recent_rides.has_next %}
+              <a href="?page={{ recent_rides.next_page_number }}" class="page-link">
+                  Next <i class="fas fa-chevron-right"></i>
+              </a>
+          {% endif %}
+      </div>
+      {% endif %}
+      
+      <!-- Show total count info -->
+      <div class="pagination-info">
+          Showing {{ recent_rides.start_index }}-{{ recent_rides.end_index }} of {{ recent_rides.paginator.count }} rides
+      </div>
+    </div>
+  </div>
 
       
    
@@ -1556,6 +1898,18 @@ const GOOGLE_MAPS_API_KEY = 'AIzaSyAUMHV6_Zn7ThpeGbl8qC6gMmfvxKU7IgI';
 let rideStatusInterval = null;
 let currentRideId = null;
 let rideSocket = null;
+
+const CURRENT_RIDE_ID = "{{ request.session.current_ride_id|default:'null' }}";
+const CURRENT_RIDE_STATUS = "{{ request.session.current_ride_status|default:'null' }}";
+const COMPLETED_RIDE_FARE = {{ request.session.completed_ride_fare|default:0 }};
+const CURRENT_DRIVER = {{ request.session.current_driver|default:'null'|safe }};
+
+console.log('[SESSION INIT]', {
+  rideId: CURRENT_RIDE_ID,
+  status: CURRENT_RIDE_STATUS,
+  fare: COMPLETED_RIDE_FARE,
+  driver: CURRENT_DRIVER
+});
 
 
 // Add this near your other WebSocket code
@@ -1768,6 +2122,60 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Connect WebSocket
     connectWebSocket();
+
+
+    // SESSION RESTORATION - FIXED
+    console.log('[SESSION CHECK]', {
+      rideId: CURRENT_RIDE_ID,
+      status: CURRENT_RIDE_STATUS,
+      fare: COMPLETED_RIDE_FARE,
+      driver: CURRENT_DRIVER
+  });
+
+  if (CURRENT_RIDE_ID && CURRENT_RIDE_ID !== "null" && CURRENT_RIDE_STATUS && CURRENT_RIDE_STATUS !== "null") {
+      console.log('[SESSION] Found active ride:', CURRENT_RIDE_ID, 'Status:', CURRENT_RIDE_STATUS);
+      currentRideId = CURRENT_RIDE_ID;
+
+      const rideForm = document.getElementById('rideForm');
+      const trackingCard = document.getElementById('rideTrackingCard');
+      
+      // Hide form, show tracking
+      if (rideForm) rideForm.style.display = 'none';
+      if (trackingCard) trackingCard.style.display = 'block';
+      
+      // Set the UI to the correct state based on session
+      const sessionData = {
+          status: CURRENT_RIDE_STATUS,
+          fare: COMPLETED_RIDE_FARE,
+          payment_status: 'pending', // Default for completed rides
+          driver: CURRENT_DRIVER && CURRENT_DRIVER !== "null" ? CURRENT_DRIVER : null
+      };
+
+      console.log('[SESSION] Restoring UI with:', sessionData);
+      
+      // Update UI immediately with session data
+      updateRideStatusUI(sessionData);
+      
+      // Start tracking for non-completed rides
+      if (CURRENT_RIDE_STATUS !== 'completed') {
+          console.log('[SESSION] Starting tracking for ride:', CURRENT_RIDE_ID);
+          startRideTracking(CURRENT_RIDE_ID);
+      } else {
+          console.log('[SESSION] Ride completed, showing payment state');
+          // For completed rides, we don't need to poll status
+          clearInterval(rideStatusInterval);
+      }
+  } else {
+      console.log('[SESSION] No active ride found');
+      // Ensure form is visible if no active ride
+      const rideForm = document.getElementById('rideForm');
+      const trackingCard = document.getElementById('rideTrackingCard');
+      if (rideForm) rideForm.style.display = 'block';
+      if (trackingCard) trackingCard.style.display = 'none';
+  }
+
+
+
 
     // Form submission handler
     const rideForm = document.getElementById('rideForm');
@@ -2163,85 +2571,112 @@ async function checkRideStatus() {
 }
 
 function updateRideStatusUI(data) {
-    const statusElement = document.getElementById('trackingStatus');
-    const searchingState = document.getElementById('searchingState');
-    const assignedState = document.getElementById('driverAssignedState');
-    const cancelButton = document.getElementById('cancelRideBtn');
-    
-    if (!statusElement || !searchingState || !assignedState || !cancelButton) return;
+  const statusElement = document.getElementById('trackingStatus');
+  const searchingState = document.getElementById('searchingState');
+  const assignedState = document.getElementById('driverAssignedState');
+  const completedState = document.getElementById('tripCompletedState');
+  const cancelButton = document.getElementById('cancelRideBtn');
+  const payNowButton = document.getElementById('payNowBtn');
+  const paymentProcessingBtn = document.getElementById('paymentProcessingBtn');
+  const paymentCompletedState = document.getElementById('paymentCompletedState');
 
-    switch(data.status) {
-        case 'pending':
-            statusElement.textContent = "Finding you a driver";
-            searchingState.style.display = 'block';
-            assignedState.style.display = 'none';
-            cancelButton.style.display = 'block';
-            break;
-            
-        case 'accepted':
-            statusElement.textContent = "Driver is on the way!";
-            searchingState.style.display = 'none';
-            assignedState.style.display = 'block';
-            
-            if (data.driver) {
-                const driverNameEl = document.getElementById('driverName');
-                const vehicleInfoEl = document.getElementById('vehicleInfo');
-                
-                if (driverNameEl) {
-                    driverNameEl.textContent = data.driver.name || "Driver assigned";
-                }
-                
-                if (vehicleInfoEl) {
-                    const vehicleParts = [
-                        data.driver.car_model,
-                        data.driver.license_plate
-                    ].filter(part => part && part !== 'N/A' && part !== 'Unknown');
-                    
-                    vehicleInfoEl.textContent = vehicleParts.join(' • ') || "Vehicle details coming soon";
-                }
-                
-                if (data.driver.rating) {
-                    updateStarRating(data.driver.rating);
-                }
-            } else {
-                const driverNameEl = document.getElementById('driverName');
-                const vehicleInfoEl = document.getElementById('vehicleInfo');
-                if (driverNameEl) driverNameEl.textContent = "Driver assigned";
-                if (vehicleInfoEl) vehicleInfoEl.textContent = "Getting details...";
-            }
-            
-            const estimatedArrivalEl = document.getElementById('estimatedArrival');
-            if (estimatedArrivalEl) {
-                estimatedArrivalEl.textContent = data.eta ? `ETA: ${data.eta} min` : "Arrival time coming soon";
-            }
-            break;
-            
-        case 'started':
-            statusElement.textContent = "Trip in progress";
-            statusElement.style.color = "";
-            const estimatedArrivalEl2 = document.getElementById('estimatedArrival');
-            if (estimatedArrivalEl2) estimatedArrivalEl2.textContent = "En route to destination";
-            break;
-            
-        case 'completed':
-            statusElement.textContent = "Trip completed!";
-            statusElement.style.color = "green";
-            cancelButton.style.display = 'none';
-            if (data.fare) {
-                const estimatedArrivalEl3 = document.getElementById('estimatedArrival');
-                if (estimatedArrivalEl3) {
-                    estimatedArrivalEl3.textContent = `Fare: ₦${data.fare.toFixed(2)}`;
-                }
-            }
-            break;
-            
-        case 'cancelled':
-            statusElement.textContent = "Trip cancelled";
-            statusElement.style.color = "red";
-            cancelButton.style.display = 'none';
-            hideRideTrackingCard();
-            break;
-    }
+  if (!statusElement || !searchingState || !assignedState || !cancelButton) return;
+
+  switch(data.status) {
+      case 'pending':
+          statusElement.textContent = "Finding you a driver";
+          searchingState.style.display = 'block';
+          assignedState.style.display = 'none';
+          completedState.style.display = 'none';
+          cancelButton.style.display = 'block';
+          payNowButton.style.display = 'none';
+          paymentCompletedState.style.display = 'none';
+          break;
+          
+      case 'accepted':
+          statusElement.textContent = "Driver is on the way!";
+          searchingState.style.display = 'none';
+          assignedState.style.display = 'block';
+          completedState.style.display = 'none';
+          cancelButton.style.display = 'block';
+          payNowButton.style.display = 'none';
+          paymentCompletedState.style.display = 'none';
+          
+          if (data.driver) {
+              const driverNameEl = document.getElementById('driverName');
+              const vehicleInfoEl = document.getElementById('vehicleInfo');
+              
+              if (driverNameEl) driverNameEl.textContent = data.driver.name || "Driver assigned";
+              if (vehicleInfoEl) vehicleInfoEl.textContent = data.driver.car_model && data.driver.license_plate 
+                  ? `${data.driver.car_model} • ${data.driver.license_plate}`
+                  : "Vehicle details coming soon";
+          }
+          
+          const estimatedArrivalEl = document.getElementById('estimatedArrival');
+          if (estimatedArrivalEl) {
+              estimatedArrivalEl.textContent = data.eta ? `ETA: ${data.eta} min` : "Arrival time coming soon";
+          }
+          break;
+          
+      case 'started':
+          statusElement.textContent = "Trip in progress";
+          statusElement.style.color = "";
+          searchingState.style.display = 'none';
+          assignedState.style.display = 'block';
+          completedState.style.display = 'none';
+          cancelButton.style.display = 'none';
+          payNowButton.style.display = 'none';
+          paymentCompletedState.style.display = 'none';
+          
+          const estimatedArrivalEl2 = document.getElementById('estimatedArrival');
+          if (estimatedArrivalEl2) estimatedArrivalEl2.textContent = "En route to destination";
+          break;
+          
+      case 'completed':
+          // Hide all other states, show completed state
+          statusElement.textContent = "Trip Complete";
+          searchingState.style.display = 'none';
+          assignedState.style.display = 'none';
+          completedState.style.display = 'block';
+          cancelButton.style.display = 'none';
+          
+          // Update completed state information
+          const completedFareEl = document.getElementById('completedFareAmount');
+          const completedDriverNameEl = document.getElementById('completedDriverName');
+          const completedVehicleInfoEl = document.getElementById('completedVehicleInfo');
+          const payNowAmountEl = document.getElementById('payNowAmount');
+          
+          if (completedFareEl) completedFareEl.textContent = data.fare ? data.fare.toFixed(2) : '0.00';
+          if (payNowAmountEl) payNowAmountEl.textContent = data.fare ? data.fare.toFixed(2) : '0.00';
+          
+          if (data.driver) {
+              if (completedDriverNameEl) completedDriverNameEl.textContent = data.driver.name || "Driver";
+              if (completedVehicleInfoEl) completedVehicleInfoEl.textContent = data.driver.car_model && data.driver.license_plate 
+                  ? `${data.driver.car_model} • ${data.driver.license_plate}`
+                  : "Vehicle info";
+          }
+          
+          // Show Pay Now button if not already paid
+          if (data.payment_status !== 'paid') {
+              payNowButton.style.display = 'block';
+              payNowButton.setAttribute('data-ride-id', currentRideId);
+              payNowButton.setAttribute('data-amount', data.fare || 0);
+          } else {
+              paymentCompletedState.style.display = 'block';
+          }
+          break;
+          
+      case 'cancelled':
+          statusElement.textContent = "Trip cancelled";
+          statusElement.style.color = "red";
+          searchingState.style.display = 'none';
+          assignedState.style.display = 'none';
+          completedState.style.display = 'none';
+          cancelButton.style.display = 'none';
+          payNowButton.style.display = 'none';
+          paymentCompletedState.style.display = 'none';
+          break;
+  }
 }
 
 function updateStarRating(rating) {
@@ -2322,6 +2757,173 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+// Add event listener for Pay Now button
+document.addEventListener('DOMContentLoaded', function() {
+  // ... your existing code
+  
+  // Pay Now button handler
+  document.getElementById('payNowBtn').addEventListener('click', function() {
+      const rideId = this.getAttribute('data-ride-id');
+      const amount = this.getAttribute('data-amount');
+      
+      // Show processing state
+      this.style.display = 'none';
+      document.getElementById('paymentProcessingBtn').style.display = 'block';
+      
+      // Initiate payment
+      initiatePaystackPayment(rideId);
+  });
+});
+
+// Update your initiatePaystackPayment function
+async function initiatePaystackPayment(rideId) {
+  try {
+      const response = await fetch(`/initiate-payment/${rideId}/`, {
+          method: 'POST',
+          headers: {
+              'X-CSRFToken': getCookie('csrftoken'),
+              'X-Requested-With': 'XMLHttpRequest'
+          }
+      });
+
+      const data = await response.json();
+      
+      if (data.status === 'success' && data.payment_url) {
+          // Redirect to Paystack
+          window.location.href = data.payment_url;
+      } else {
+          throw new Error(data.error || 'Failed to initiate payment');
+      }
+  } catch (error) {
+      console.error('Payment initiation error:', error);
+      alert('Failed to initiate payment: ' + error.message);
+      
+      // Reset button states
+      document.getElementById('paymentProcessingBtn').style.display = 'none';
+      document.getElementById('payNowBtn').style.display = 'block';
+  }
+}
+
+// Payment status handler - add this to your rider dashboard JavaScript
+function handlePaymentStatus() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const paymentStatus = urlParams.get('payment');
+  const amount = urlParams.get('amount');
+  const rideId = urlParams.get('ride_id');
+
+  if (paymentStatus === 'success') {
+      // Show success message
+      showPaymentSuccessMessage(amount);
+      
+      // Refresh completed rides to show updated payment status
+      updateRiderCompletedRides();
+      
+      // Remove the parameters from URL (clean URL)
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+      
+  } else if (paymentStatus === 'failed') {
+      // Show error message
+      showPaymentErrorMessage();
+      
+      // Remove the parameters from URL
+      const cleanUrl = window.location.pathname;
+      window.history.replaceState({}, document.title, cleanUrl);
+  }
+}
+
+function showPaymentSuccessMessage(amount) {
+  // Create success toast
+  const toast = document.createElement('div');
+  toast.className = 'payment-success-toast';
+  toast.innerHTML = `
+      <div class="toast-content">
+          <i class="fas fa-check-circle"></i>
+          <div class="toast-text">
+              <strong>Payment Successful!</strong>
+              <span>₦${parseFloat(amount).toFixed(2)} paid successfully</span>
+          </div>
+          <button class="toast-close">&times;</button>
+      </div>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Add close button functionality
+  const closeBtn = toast.querySelector('.toast-close');
+  closeBtn.addEventListener('click', () => {
+      toast.remove();
+  });
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+      if (toast.parentNode) {
+          toast.remove();
+      }
+  }, 5000);
+}
+
+function showPaymentErrorMessage() {
+  // Create error toast
+  const toast = document.createElement('div');
+  toast.className = 'payment-error-toast';
+  toast.innerHTML = `
+      <div class="toast-content">
+          <i class="fas fa-exclamation-circle"></i>
+          <div class="toast-text">
+              <strong>Payment Failed</strong>
+              <span>Please try again or contact support</span>
+          </div>
+          <button class="toast-close">&times;</button>
+      </div>
+  `;
+  
+  document.body.appendChild(toast);
+  
+  // Add close button functionality
+  const closeBtn = toast.querySelector('.toast-close');
+  closeBtn.addEventListener('click', () => {
+      toast.remove();
+  });
+  
+  // Auto remove after 5 seconds
+  setTimeout(() => {
+      if (toast.parentNode) {
+          toast.remove();
+      }
+  }, 5000);
+}
+
+// Update your existing updateRiderCompletedRides function
+function updateRiderCompletedRides() {
+  fetch('/rider/completed-rides/', {
+      headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+      }
+  })
+  .then(response => response.json())
+  .then(data => {
+      const container = document.getElementById('completedRidesContainer');
+      if (container) {
+          container.innerHTML = data.html;
+      }
+  })
+  .catch(error => {
+      console.error('Error updating rider completed rides:', error);
+  });
+}
+
+// Call this when the page loads
+document.addEventListener('DOMContentLoaded', function() {
+  // Your existing DOMContentLoaded code...
+  
+  // Handle payment status from URL parameters
+  handlePaymentStatus();
+  
+  // Initialize payment functionality
+  setTimeout(initializePaymentFunctionality, 1000);
+});
   </script>
 </body>
 </html>
