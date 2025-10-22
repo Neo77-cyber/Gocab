@@ -124,6 +124,7 @@ class RideRequest(models.Model):
 
     @property
     def driver_earnings(self):
+        
         if self.total_fare:
             return float(self.total_fare) * 0.8
         return 0.0

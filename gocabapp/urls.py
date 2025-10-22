@@ -27,6 +27,7 @@ urlpatterns = [
     path('initiate-payment/<int:ride_id>/', views.initiate_payment, name='initiate_payment'),
     path('payment/success/<int:ride_id>/', views.payment_success, name='payment_success'),
     path('logout', views.logout, name = 'logout'),
+    
 
 
     ]

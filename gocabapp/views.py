@@ -163,10 +163,61 @@ def ride_status(request, ride_id):
 
 @login_required(login_url='home')
 def rider_dashboard(request):
+    debug_session(request, "Entering rider_dashboard")
+
     active_ride = RideRequest.objects.filter(
         passenger=request.user,
         status__in=['pending', 'accepted', 'started']
     ).order_by('-requested_at').first()
+
+   
+    if active_ride:
+        request.session['current_ride_id'] = str(active_ride.id)
+        request.session['current_ride_status'] = active_ride.status
+        
+        if active_ride.driver and hasattr(active_ride.driver, 'driver'):
+            vehicle_model = getattr(active_ride.driver.driver, 'vehicle_model', None) or 'Unknown'
+            license_plate = getattr(active_ride.driver.driver, 'license_plate', None) or 'N/A'
+            rating = getattr(active_ride.driver.driver, 'rating', None)
+            rating_value = float(rating) if rating is not None else 4.5
+            
+            request.session['current_driver'] = {
+                'name': active_ride.driver.get_full_name() or active_ride.driver.username,
+                'car_model': vehicle_model,
+                'license_plate': license_plate,
+                'rating': rating_value,
+            }
+        
+        request.session.modified = True
+    else:
+        # Check for recently completed ride (within last 10 minutes)
+        completed_ride = RideRequest.objects.filter(
+            passenger=request.user,
+            status='completed',
+            payment_status__in=['pending', 'processing']
+        ).order_by('-completed_at').first()
+        
+        if completed_ride and completed_ride.completed_at:
+            time_since_completion = timezone.now() - completed_ride.completed_at
+            if time_since_completion.total_seconds() < 600:  # 10 minutes
+                request.session['current_ride_id'] = str(completed_ride.id)
+                request.session['current_ride_status'] = 'completed'
+                request.session['completed_ride_fare'] = float(completed_ride.total_fare) if completed_ride.total_fare is not None else 0.0
+                
+                if completed_ride.driver and hasattr(completed_ride.driver, 'driver'):
+                    vehicle_model = getattr(completed_ride.driver.driver, 'vehicle_model', None) or 'Unknown'
+                    license_plate = getattr(completed_ride.driver.driver, 'license_plate', None) or 'N/A'
+                    rating = getattr(completed_ride.driver.driver, 'rating', None)
+                    rating_value = float(rating) if rating is not None else 4.5
+                    
+                    request.session['current_driver'] = {
+                        'name': completed_ride.driver.get_full_name() or completed_ride.driver.username,
+                        'car_model': vehicle_model,
+                        'license_plate': license_plate,
+                        'rating': rating_value,
+                    }
+                
+                request.session.modified = True
 
     try:
         rider_profile = Rider.objects.get(user=request.user)
@@ -180,15 +231,19 @@ def rider_dashboard(request):
         passenger=request.user,
         status='completed'
     )
-    total_miles = sum(ride.distance_km for ride in completed_rides if ride.distance_km)  
-
     
+    # Safely calculate total miles
+    total_miles = 0.0
+    for ride in completed_rides:
+        if ride.distance_km is not None:
+            total_miles += float(ride.distance_km)
+
     recent_rides_list = RideRequest.objects.filter(
         passenger=request.user,
         status='completed'
     ).order_by('-completed_at').select_related('driver')
     
-    paginator = Paginator(recent_rides_list, 5)  
+    paginator = Paginator(recent_rides_list, 5)
     page = request.GET.get('page')
     
     try:
@@ -202,7 +257,7 @@ def rider_dashboard(request):
         user=request.user,
         is_active=True
     ).count()
-    
+
     context = {
         'active_ride': active_ride,
         'is_rider': True,
@@ -215,6 +270,8 @@ def rider_dashboard(request):
         'recent_rides': recent_rides,
         'notification_count': notification_count,
     }
+    
+    debug_session(request, "Exiting rider_dashboard")
     return render(request, 'rider-dashboard.html', context)
 
 @csrf_exempt
@@ -495,36 +552,76 @@ def update_ride_session(request, ride_id, status):
     try:
         ride = RideRequest.objects.get(id=ride_id)
         
-        # Always update these three session variables
+        # Always update these session variables
         request.session['current_ride_id'] = str(ride_id)
         request.session['current_ride_status'] = str(status)
+        request.session['last_updated'] = timezone.now().isoformat()
         
-        # Store fare for completed rides
+        # Store fare for completed rides - handle None values
         if status == 'completed':
-            request.session['completed_ride_fare'] = float(ride.total_fare) if ride.total_fare else 0
+            request.session['completed_ride_fare'] = float(ride.total_fare) if ride.total_fare is not None else 0.0
         
         # Store driver info if available
-        if hasattr(ride, 'driver') and ride.driver:
+        if hasattr(ride, 'driver') and ride.driver and hasattr(ride.driver, 'driver'):
+            # Safely get driver attributes with defaults
+            vehicle_model = getattr(ride.driver.driver, 'vehicle_model', None) or 'Unknown'
+            license_plate = getattr(ride.driver.driver, 'license_plate', None) or 'N/A'
+            rating = getattr(ride.driver.driver, 'rating', None)
+            rating_value = float(rating) if rating is not None else 4.5
+            
             request.session['current_driver'] = {
-                'name': ride.driver.get_full_name(),
-                'car_model': getattr(ride.driver.driver, 'vehicle_model', ''),
-                'license_plate': getattr(ride.driver.driver, 'license_plate', ''),
+                'name': ride.driver.get_full_name() or ride.driver.username,
+                'car_model': vehicle_model,
+                'license_plate': license_plate,
+                'rating': rating_value,
             }
         
         request.session.modified = True
-        print(f"[SESSION] Updated - Ride: {ride_id}, Status: {status}")
+        logger.info(f"[SESSION] Updated - Ride: {ride_id}, Status: {status}, User: {request.user.username}")
+        
+        # Debug output
+        debug_session(request, f"After update_ride_session for ride {ride_id}")
         return True
+        
+    except RideRequest.DoesNotExist:
+        logger.error(f"[SESSION] Ride {ride_id} not found")
+        return False
     except Exception as e:
-        print(f"[SESSION] Error updating session: {e}")
+        logger.error(f"[SESSION] Error updating session: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def clear_ride_session(request):
     """Clear ride session data"""
-    keys_to_remove = ['current_ride_id', 'current_ride_status', 'completed_ride_fare', 'current_driver']
+    keys_to_remove = [
+        'current_ride_id', 
+        'current_ride_status', 
+        'completed_ride_fare', 
+        'current_driver',
+        'current_passenger',
+        'last_updated'
+    ]
+    
     for key in keys_to_remove:
-        request.session.pop(key, None)
+        if key in request.session:
+            del request.session[key]
+    
     request.session.modified = True
-    print("[SESSION] Cleared ride session")
+    logger.info(f"[SESSION] Cleared ride session for user: {request.user.username}")
+    debug_session(request, "After clear_ride_session")
+
+@login_required
+def debug_session_view(request):
+    """Debug endpoint to check session state"""
+    session_data = {
+        'current_ride_id': request.session.get('current_ride_id'),
+        'current_ride_status': request.session.get('current_ride_status'),
+        'completed_ride_fare': request.session.get('completed_ride_fare'),
+        'current_driver': request.session.get('current_driver'),
+        'session_key': request.session.session_key,
+    }
+    return JsonResponse(session_data)
 
 @csrf_exempt
 def accept_ride(request, ride_id):
@@ -536,64 +633,71 @@ def accept_ride(request, ride_id):
             ride.accepted_at = timezone.now()
             ride.save()
 
-            
+            # Safely build ride data with None checks
             ride_data = {
                 'id': ride.id,
-                'fare': ride.total_fare,
+                'fare': float(ride.total_fare) if ride.total_fare is not None else 0.0,
                 'status': ride.status,
-                'pickup': ride.current_location,
-                'dropoff': ride.destination,
-                'distance_km': float(ride.distance_km),  
-                'duration_min': float(ride.duration_min), 
-                'fare': float(ride.total_fare),
+                'pickup': ride.current_location or '',
+                'dropoff': ride.destination or '',
+                'distance_km': float(ride.distance_km) if ride.distance_km is not None else 0.0,
+                'duration_min': float(ride.duration_min) if ride.duration_min is not None else 0.0,
                 'passenger': ride.passenger.username,
-                'requested_at': ride.requested_at,
+                'requested_at': ride.requested_at.isoformat() if ride.requested_at else '',
             }
 
             if not update_ride_session(request, ride_id, 'accepted'):
                 return JsonResponse({'status': 'error', 'message': 'Failed to update session'}, status=500)
 
-            
+            # Serialize safely
             ride_payload = json.loads(json.dumps(ride_data, cls=DjangoSafeJSONEncoder))
 
-            
             channel_layer = get_channel_layer()
             async_to_sync(channel_layer.group_send)(
                 f"driver_{request.user.id}",
                 {
                     "type": "ride.accepted",
                     "ride": ride_payload
-                    
                 }
             )
 
+            # Safely get driver attributes
+            vehicle_model = getattr(request.user.driver, 'vehicle_model', None) or 'Unknown'
+            license_plate = getattr(request.user.driver, 'license_plate', None) or 'N/A'
+            rating = getattr(request.user.driver, 'rating', None)
+            rating_value = float(rating) if rating is not None else 4.5
+
             async_to_sync(channel_layer.group_send)(
-                        f"ride_{ride.id}",
-                        {
-                            "type": "ride_update",
-                            "event": "accepted",
-                            "ride_id": ride.id,
-                            "driver": {
-                                "name": request.user.get_full_name(),
-                                "car_model": request.user.driver.vehicle_model,
-                                "license_plate": request.user.driver.license_plate,
-                                "rating": float(request.user.driver.rating or 0),
-                            },
-                            "eta": 7,
-                            "distance": float(ride.distance_km or 0),
-                            "fare": float(ride.total_fare or 0),
-                        }
-                    )
+                f"ride_{ride.id}",
+                {
+                    "type": "ride_update",
+                    "event": "accepted",
+                    "ride_id": ride.id,
+                    "driver": {
+                        "name": request.user.get_full_name() or request.user.username,
+                        "car_model": vehicle_model,
+                        "license_plate": license_plate,
+                        "rating": rating_value,
+                    },
+                    "eta": 7,
+                    "distance": float(ride.distance_km) if ride.distance_km is not None else 0.0,
+                    "fare": float(ride.total_fare) if ride.total_fare is not None else 0.0,
+                }
+            )
 
             return JsonResponse({'status': 'success'})
 
         except RideRequest.DoesNotExist:
             return JsonResponse({'status': 'error', 'message': 'Ride not found'}, status=404)
+        except Exception as e:
+            logger.error(f"Accept ride error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
 
 
 @csrf_exempt
 def start_trip(request, ride_id):
-
     if not hasattr(request.user, 'driver'):
         return JsonResponse({'error': 'Driver profile not found'}, status=403)
     
@@ -604,31 +708,37 @@ def start_trip(request, ride_id):
             status='accepted'
         )
         
-        # Update ride status
         ride.status = 'started'
         ride.started_at = timezone.now()
         ride.save()
         
+        # Safely build ride data with None checks
+        vehicle_model = getattr(request.user.driver, 'vehicle_model', None) or 'Unknown'
+        license_plate = getattr(request.user.driver, 'license_plate', None) or 'N/A'
+        rating = getattr(request.user.driver, 'rating', None)
+        rating_value = float(rating) if rating is not None else 4.5
+        phone_number = getattr(request.user.driver, 'phone_number', None) or ''
+        
         ride_data = {
             'id': ride.id,
             'status': ride.status,
-            'started_at': ride.started_at.isoformat(),
-            'pickup': ride.current_location,
-            'dropoff': ride.destination,
-            'distance_km': float(ride.distance_km),
-            'duration_min': float(ride.duration_min),
-            'fare': float(ride.total_fare),
+            'started_at': ride.started_at.isoformat() if ride.started_at else '',
+            'pickup': ride.current_location or '',
+            'dropoff': ride.destination or '',
+            'distance_km': float(ride.distance_km) if ride.distance_km is not None else 0.0,
+            'duration_min': float(ride.duration_min) if ride.duration_min is not None else 0.0,
+            'fare': float(ride.total_fare) if ride.total_fare is not None else 0.0,
             'driver': {
                 'id': request.user.id,
-                'name': request.user.get_full_name(),
-                'car_model': request.user.driver.vehicle_model,
-                'license_plate': request.user.driver.license_plate,
-                'rating': float(request.user.driver.rating or 0),
-                'phone': str(request.user.driver.phone_number),  # Changed this line
+                'name': request.user.get_full_name() or request.user.username,
+                'car_model': vehicle_model,
+                'license_plate': license_plate,
+                'rating': rating_value,
+                'phone': str(phone_number),
             },
             'passenger': {
                 'id': ride.passenger.id,
-                'name': ride.passenger.get_full_name(),
+                'name': ride.passenger.get_full_name() or ride.passenger.username,
                 'rating': 0,
             }
         }
@@ -636,12 +746,10 @@ def start_trip(request, ride_id):
         if not update_ride_session(request, ride_id, 'started'):
             return JsonResponse({'status': 'error', 'message': 'Failed to update session'}, status=500)
 
-        # Serialize safely
         ride_payload = json.loads(json.dumps(ride_data, cls=DjangoSafeJSONEncoder))
         
         channel_layer = get_channel_layer()
         
-        # Notify passenger (through ride-specific group)
         async_to_sync(channel_layer.group_send)(
             f"ride_{ride.id}",
             {
@@ -653,7 +761,6 @@ def start_trip(request, ride_id):
             }
         )
         
-        # Notify driver (through driver-specific group)
         async_to_sync(channel_layer.group_send)(
             f"driver_{request.user.id}",
             {
@@ -677,41 +784,28 @@ def start_trip(request, ride_id):
             'error': 'Ride not found, already started, or not assigned to you'
         }, status=404)
     except Exception as e:
+        logger.error(f"Start trip error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return JsonResponse({'error': str(e)}, status=500)
+
 
 @csrf_exempt
 def complete_trip(request, ride_id):
-    
-    
     if not hasattr(request.user, 'driver'):
-        
         return JsonResponse({
             'status': 'error',
             'error': 'Driver profile not found'
         }, status=403)
 
     try:
-        
-        all_rides_with_id = RideRequest.objects.filter(id=ride_id)
-        
-        
-        
-        user_rides = RideRequest.objects.filter(driver=request.user)
-        
-        
-        
         ride = RideRequest.objects.get(id=ride_id, driver=request.user)
         
-        
         if ride.status != 'started':
-            
             return JsonResponse({
                 'status': 'error', 
                 'error': f'Ride must be started first. Current status: {ride.status}'
             }, status=400)
-        else:
-            print(f"✅ STATUS OK: Ride is started, proceeding with completion")
-            
         
         ride.status = 'completed'
         ride.completed_at = timezone.now()
@@ -721,44 +815,43 @@ def complete_trip(request, ride_id):
         if not update_ride_session(request, ride_id, 'completed'):
             return JsonResponse({'status': 'error', 'message': 'Failed to update session'}, status=500)
         
-        
         ride.refresh_from_db()
-        
+
+        # Safely build ride data with None checks
+        vehicle_model = getattr(request.user.driver, 'vehicle_model', None) or 'Unknown'
+        license_plate = getattr(request.user.driver, 'license_plate', None) or 'N/A'
+        rating = getattr(request.user.driver, 'rating', None)
+        rating_value = float(rating) if rating is not None else 4.5
+        phone_number = getattr(request.user.driver, 'phone_number', None) or ''
 
         ride_data = {
             'id': ride.id,
             'status': ride.status,
-            'fare': float(ride.total_fare) if ride.total_fare else 0,
+            'fare': float(ride.total_fare) if ride.total_fare is not None else 0.0,
             'started_at': ride.started_at.isoformat() if ride.started_at else None,
-            'pickup': ride.current_location,
-            'dropoff': ride.destination,
-            'distance_km': float(ride.distance_km) if ride.distance_km else 0,
-            'duration_min': float(ride.duration_min) if ride.duration_min else 0,
-            'fare': float(ride.total_fare) if ride.total_fare else 0,
+            'pickup': ride.current_location or '',
+            'dropoff': ride.destination or '',
+            'distance_km': float(ride.distance_km) if ride.distance_km is not None else 0.0,
+            'duration_min': float(ride.duration_min) if ride.duration_min is not None else 0.0,
             'driver': {
                 'id': request.user.id,
-                'name': request.user.get_full_name(),
-                'car_model': getattr(request.user.driver, 'vehicle_model', ''),
-                'license_plate': getattr(request.user.driver, 'license_plate', ''),
-                'rating': float(getattr(request.user.driver, 'rating', 0) or 0),
-                'phone': str(getattr(request.user.driver, 'phone_number', '')),  
+                'name': request.user.get_full_name() or request.user.username,
+                'car_model': vehicle_model,
+                'license_plate': license_plate,
+                'rating': rating_value,
+                'phone': str(phone_number),
             },
             'passenger': {
                 'id': ride.passenger.id,
-                'name': ride.passenger.get_full_name(),
+                'name': ride.passenger.get_full_name() or ride.passenger.username,
                 'rating': 0,
             }
         }
 
-        
         ride_payload = json.loads(json.dumps(ride_data, cls=DjangoSafeJSONEncoder))
-
         payment_url = create_paystack_payment_link(ride)
-        
 
         channel_layer = get_channel_layer()
-        
-        
         
         try:
             async_to_sync(channel_layer.group_send)(
@@ -772,10 +865,8 @@ def complete_trip(request, ride_id):
                     "data": ride_payload
                 }
             )
-            
         except Exception as e:
             print(f"Error sending passenger notification: {e}")
-        
         
         try:
             async_to_sync(channel_layer.group_send)(
@@ -792,7 +883,6 @@ def complete_trip(request, ride_id):
                     }
                 }
             )
-            
         except Exception as e:
             print(f"Error sending driver notification: {e}")
     
@@ -806,19 +896,19 @@ def complete_trip(request, ride_id):
         return JsonResponse(response_data)
 
     except RideRequest.DoesNotExist:
-        
         return JsonResponse({
             'status': 'error',
             'error': 'Trip not found or already completed'
         }, status=404)
     except Exception as e:
-        
+        logger.error(f"Complete trip error: {str(e)}")
         import traceback
         traceback.print_exc()
         return JsonResponse({
             'status': 'error',
             'error': str(e)
         }, status=500)
+
 
 @csrf_exempt
 def initiate_payment(request, ride_id):

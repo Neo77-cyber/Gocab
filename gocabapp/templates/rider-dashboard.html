@@ -19,17 +19,7 @@
   <!-- Font Awesome -->
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-  <script>
-    function initApp() {
-      // Load Google Maps
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${GOOGLE_MAPS_API_KEY}&libraries=places&callback=initAutocomplete`;
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-    document.addEventListener('DOMContentLoaded', initApp);
-  </script>
+  
 
   <style>
     :root {
@@ -1899,10 +1889,10 @@ let rideStatusInterval = null;
 let currentRideId = null;
 let rideSocket = null;
 
-const CURRENT_RIDE_ID = "{{ request.session.current_ride_id|default:'null' }}";
-const CURRENT_RIDE_STATUS = "{{ request.session.current_ride_status|default:'null' }}";
+const CURRENT_RIDE_ID = "{{ request.session.current_ride_id|default:'' }}";
+const CURRENT_RIDE_STATUS = "{{ request.session.current_ride_status|default:'' }}";
 const COMPLETED_RIDE_FARE = {{ request.session.completed_ride_fare|default:0 }};
-const CURRENT_DRIVER = {{ request.session.current_driver|default:'null'|safe }};
+const CURRENT_DRIVER = {% if request.session.current_driver %}{{ request.session.current_driver|safe }}{% else %}null{% endif %};
 
 console.log('[SESSION INIT]', {
   rideId: CURRENT_RIDE_ID,
@@ -2114,97 +2104,123 @@ window.initAutocomplete = function() {
     }
 };
 
-document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM loaded, initializing application");
-    
-    // Load Google Maps API
-    loadGoogleMapsAPI();
-    
-    // Connect WebSocket
-    connectWebSocket();
-
-
-    // SESSION RESTORATION - FIXED
-    console.log('[SESSION CHECK]', {
+// Replace your restoreRideFromSession function with this improved version
+function restoreRideFromSession() {
+  console.log('[SESSION CHECK] Starting session restore');
+  console.log('[SESSION DATA]', {
       rideId: CURRENT_RIDE_ID,
       status: CURRENT_RIDE_STATUS,
       fare: COMPLETED_RIDE_FARE,
       driver: CURRENT_DRIVER
   });
 
-  if (CURRENT_RIDE_ID && CURRENT_RIDE_ID !== "null" && CURRENT_RIDE_STATUS && CURRENT_RIDE_STATUS !== "null") {
-      console.log('[SESSION] Found active ride:', CURRENT_RIDE_ID, 'Status:', CURRENT_RIDE_STATUS);
-      currentRideId = CURRENT_RIDE_ID;
-
-      const rideForm = document.getElementById('rideForm');
-      const trackingCard = document.getElementById('rideTrackingCard');
-      
-      // Hide form, show tracking
-      if (rideForm) rideForm.style.display = 'none';
-      if (trackingCard) trackingCard.style.display = 'block';
-      
-      // Set the UI to the correct state based on session
-      const sessionData = {
-          status: CURRENT_RIDE_STATUS,
-          fare: COMPLETED_RIDE_FARE,
-          payment_status: 'pending', // Default for completed rides
-          driver: CURRENT_DRIVER && CURRENT_DRIVER !== "null" ? CURRENT_DRIVER : null
-      };
-
-      console.log('[SESSION] Restoring UI with:', sessionData);
-      
-      // Update UI immediately with session data
-      updateRideStatusUI(sessionData);
-      
-      // Start tracking for non-completed rides
-      if (CURRENT_RIDE_STATUS !== 'completed') {
-          console.log('[SESSION] Starting tracking for ride:', CURRENT_RIDE_ID);
-          startRideTracking(CURRENT_RIDE_ID);
-      } else {
-          console.log('[SESSION] Ride completed, showing payment state');
-          // For completed rides, we don't need to poll status
-          clearInterval(rideStatusInterval);
-      }
-  } else {
+  if (!CURRENT_RIDE_ID || CURRENT_RIDE_ID === "") {
       console.log('[SESSION] No active ride found');
-      // Ensure form is visible if no active ride
-      const rideForm = document.getElementById('rideForm');
-      const trackingCard = document.getElementById('rideTrackingCard');
-      if (rideForm) rideForm.style.display = 'block';
-      if (trackingCard) trackingCard.style.display = 'none';
+      showRideForm();
+      return;
   }
 
+  // We have an active ride - restore it
+  console.log('[SESSION] Found active ride:', CURRENT_RIDE_ID, 'Status:', CURRENT_RIDE_STATUS);
+  currentRideId = CURRENT_RIDE_ID;
 
+  const rideForm = document.getElementById('rideForm');
+  const trackingCard = document.getElementById('rideTrackingCard');
+  
+  // Hide form, show tracking
+  if (rideForm) rideForm.style.display = 'none';
+  if (trackingCard) trackingCard.style.display = 'block';
+  
+  // Build session data object
+  const sessionData = {
+      status: CURRENT_RIDE_STATUS,
+      fare: COMPLETED_RIDE_FARE,
+      payment_status: CURRENT_RIDE_STATUS === 'completed' ? 'pending' : null,
+      driver: CURRENT_DRIVER
+  };
 
+  console.log('[SESSION] Restoring UI with data:', sessionData);
+  
+  // Update UI immediately with session data
+  updateRideStatusUI(sessionData);
+  
+  // Connect WebSocket for real-time updates
+  if (rideSocket && rideSocket.readyState === WebSocket.OPEN) {
+      subscribeToRide(CURRENT_RIDE_ID);
+  }
+  
+  // Start polling for status updates (except for completed rides)
+  if (CURRENT_RIDE_STATUS !== 'completed') {
+      console.log('[SESSION] Starting status polling for ride:', CURRENT_RIDE_ID);
+      checkRideStatus(); // Check immediately
+      clearInterval(rideStatusInterval);
+      rideStatusInterval = setInterval(checkRideStatus, 3000);
+  } else {
+      console.log('[SESSION] Ride completed - showing payment state');
+      // For completed rides, do one final status check to get payment status
+      checkRideStatus();
+  }
+}
 
-    // Form submission handler
-    const rideForm = document.getElementById('rideForm');
-    if (rideForm) {
-        rideForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            const currentLocation = document.getElementById('current-location').value;
-            const destination = document.getElementById('destination').value;
-            
-            if (!currentLocation || !destination) {
-                alert('Please enter both locations');
-                return;
-            }
+function showRideForm() {
+  const rideForm = document.getElementById('rideForm');
+  const trackingCard = document.getElementById('rideTrackingCard');
+  if (rideForm) rideForm.style.display = 'block';
+  if (trackingCard) trackingCard.style.display = 'none';
+}
 
-            const fareEstimate = document.getElementById('fareEstimate');
-            if (fareEstimate && fareEstimate.style.display === 'block') {
-                bookRide(currentLocation, destination);
-            } else {
-                calculateFare();
-            }
-        });
-    }
+// Update your DOMContentLoaded to ensure proper initialization order
+document.addEventListener('DOMContentLoaded', function() {
+  console.log("DOM loaded, initializing application");
+  
+  // 1. Load Google Maps API first
+  loadGoogleMapsAPI();
+  
+  // 2. Connect WebSocket
+  connectWebSocket();
+  
+  // 3. Connect notification WebSocket
+  connectNotificationWebSocket();
+  
+  // 4. Restore ride from session (this must come after WebSocket connection)
+  // Add a small delay to ensure WebSocket is ready
+  setTimeout(restoreRideFromSession, 500);
+  
+  // 5. Handle payment status from URL
+  handlePaymentStatus();
+  
+  // 6. Initialize payment functionality
+  setTimeout(initializePaymentFunctionality, 1000);
 
-    // Cancel button handler
-    const cancelBtn = document.getElementById('cancelRideBtn');
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', cancelRide);
-    }
+  // Form submission handler
+  const rideForm = document.getElementById('rideForm');
+  if (rideForm) {
+      rideForm.addEventListener('submit', function(e) {
+          e.preventDefault();
+          const currentLocation = document.getElementById('current-location').value;
+          const destination = document.getElementById('destination').value;
+          
+          if (!currentLocation || !destination) {
+              alert('Please enter both locations');
+              return;
+          }
+
+          const fareEstimate = document.getElementById('fareEstimate');
+          if (fareEstimate && fareEstimate.style.display === 'block') {
+              bookRide(currentLocation, destination);
+          } else {
+              calculateFare();
+          }
+      });
+  }
+
+  // Cancel button handler
+  const cancelBtn = document.getElementById('cancelRideBtn');
+  if (cancelBtn) {
+      cancelBtn.addEventListener('click', cancelRide);
+  }
 });
+
 
 function loadGoogleMapsAPI() {
     // Check if already loaded
@@ -2570,7 +2586,10 @@ async function checkRideStatus() {
     }
 }
 
+// Enhanced updateRideStatusUI to handle all states properly
 function updateRideStatusUI(data) {
+  console.log('[UI UPDATE] Updating UI with data:', data);
+  
   const statusElement = document.getElementById('trackingStatus');
   const searchingState = document.getElementById('searchingState');
   const assignedState = document.getElementById('driverAssignedState');
@@ -2580,27 +2599,32 @@ function updateRideStatusUI(data) {
   const paymentProcessingBtn = document.getElementById('paymentProcessingBtn');
   const paymentCompletedState = document.getElementById('paymentCompletedState');
 
-  if (!statusElement || !searchingState || !assignedState || !cancelButton) return;
+  if (!statusElement) {
+      console.error('[UI UPDATE] Status element not found');
+      return;
+  }
+
+  // Hide all states first
+  if (searchingState) searchingState.style.display = 'none';
+  if (assignedState) assignedState.style.display = 'none';
+  if (completedState) completedState.style.display = 'none';
+  if (payNowButton) payNowButton.style.display = 'none';
+  if (paymentProcessingBtn) paymentProcessingBtn.style.display = 'none';
+  if (paymentCompletedState) paymentCompletedState.style.display = 'none';
 
   switch(data.status) {
       case 'pending':
+          console.log('[UI UPDATE] Showing pending state');
           statusElement.textContent = "Finding you a driver";
-          searchingState.style.display = 'block';
-          assignedState.style.display = 'none';
-          completedState.style.display = 'none';
-          cancelButton.style.display = 'block';
-          payNowButton.style.display = 'none';
-          paymentCompletedState.style.display = 'none';
+          if (searchingState) searchingState.style.display = 'block';
+          if (cancelButton) cancelButton.style.display = 'block';
           break;
           
       case 'accepted':
+          console.log('[UI UPDATE] Showing accepted state');
           statusElement.textContent = "Driver is on the way!";
-          searchingState.style.display = 'none';
-          assignedState.style.display = 'block';
-          completedState.style.display = 'none';
-          cancelButton.style.display = 'block';
-          payNowButton.style.display = 'none';
-          paymentCompletedState.style.display = 'none';
+          if (assignedState) assignedState.style.display = 'block';
+          if (cancelButton) cancelButton.style.display = 'block';
           
           if (data.driver) {
               const driverNameEl = document.getElementById('driverName');
@@ -2610,35 +2634,31 @@ function updateRideStatusUI(data) {
               if (vehicleInfoEl) vehicleInfoEl.textContent = data.driver.car_model && data.driver.license_plate 
                   ? `${data.driver.car_model} • ${data.driver.license_plate}`
                   : "Vehicle details coming soon";
+                  
+              updateStarRating(data.driver.rating || 4.5);
           }
           
           const estimatedArrivalEl = document.getElementById('estimatedArrival');
           if (estimatedArrivalEl) {
-              estimatedArrivalEl.textContent = data.eta ? `ETA: ${data.eta} min` : "Arrival time coming soon";
+              estimatedArrivalEl.textContent = data.eta ? `ETA: ${data.eta} min` : "Calculating arrival time...";
           }
           break;
           
       case 'started':
+          console.log('[UI UPDATE] Showing started state');
           statusElement.textContent = "Trip in progress";
-          statusElement.style.color = "";
-          searchingState.style.display = 'none';
-          assignedState.style.display = 'block';
-          completedState.style.display = 'none';
-          cancelButton.style.display = 'none';
-          payNowButton.style.display = 'none';
-          paymentCompletedState.style.display = 'none';
+          if (assignedState) assignedState.style.display = 'block';
+          if (cancelButton) cancelButton.style.display = 'none';
           
           const estimatedArrivalEl2 = document.getElementById('estimatedArrival');
           if (estimatedArrivalEl2) estimatedArrivalEl2.textContent = "En route to destination";
           break;
           
       case 'completed':
-          // Hide all other states, show completed state
+          console.log('[UI UPDATE] Showing completed state');
           statusElement.textContent = "Trip Complete";
-          searchingState.style.display = 'none';
-          assignedState.style.display = 'none';
-          completedState.style.display = 'block';
-          cancelButton.style.display = 'none';
+          if (completedState) completedState.style.display = 'block';
+          if (cancelButton) cancelButton.style.display = 'none';
           
           // Update completed state information
           const completedFareEl = document.getElementById('completedFareAmount');
@@ -2646,38 +2666,47 @@ function updateRideStatusUI(data) {
           const completedVehicleInfoEl = document.getElementById('completedVehicleInfo');
           const payNowAmountEl = document.getElementById('payNowAmount');
           
-          if (completedFareEl) completedFareEl.textContent = data.fare ? data.fare.toFixed(2) : '0.00';
-          if (payNowAmountEl) payNowAmountEl.textContent = data.fare ? data.fare.toFixed(2) : '0.00';
+          const fareAmount = data.fare || COMPLETED_RIDE_FARE || 0;
+          if (completedFareEl) completedFareEl.textContent = fareAmount.toFixed(2);
+          if (payNowAmountEl) payNowAmountEl.textContent = fareAmount.toFixed(2);
           
-          if (data.driver) {
-              if (completedDriverNameEl) completedDriverNameEl.textContent = data.driver.name || "Driver";
-              if (completedVehicleInfoEl) completedVehicleInfoEl.textContent = data.driver.car_model && data.driver.license_plate 
-                  ? `${data.driver.car_model} • ${data.driver.license_plate}`
+          const driverData = data.driver || CURRENT_DRIVER;
+          if (driverData) {
+              if (completedDriverNameEl) completedDriverNameEl.textContent = driverData.name || "Driver";
+              if (completedVehicleInfoEl) completedVehicleInfoEl.textContent = driverData.car_model && driverData.license_plate 
+                  ? `${driverData.car_model} • ${driverData.license_plate}`
                   : "Vehicle info";
           }
           
-          // Show Pay Now button if not already paid
-          if (data.payment_status !== 'paid') {
-              payNowButton.style.display = 'block';
-              payNowButton.setAttribute('data-ride-id', currentRideId);
-              payNowButton.setAttribute('data-amount', data.fare || 0);
+          // Show payment button or completed state
+          if (data.payment_status === 'paid') {
+              console.log('[UI UPDATE] Payment already completed');
+              if (paymentCompletedState) paymentCompletedState.style.display = 'block';
           } else {
-              paymentCompletedState.style.display = 'block';
+              console.log('[UI UPDATE] Showing pay now button');
+              if (payNowButton) {
+                  payNowButton.style.display = 'block';
+                  payNowButton.setAttribute('data-ride-id', currentRideId);
+                  payNowButton.setAttribute('data-amount', fareAmount);
+              }
           }
           break;
           
       case 'cancelled':
+          console.log('[UI UPDATE] Showing cancelled state');
           statusElement.textContent = "Trip cancelled";
           statusElement.style.color = "red";
-          searchingState.style.display = 'none';
-          assignedState.style.display = 'none';
-          completedState.style.display = 'none';
-          cancelButton.style.display = 'none';
-          payNowButton.style.display = 'none';
-          paymentCompletedState.style.display = 'none';
+          if (cancelButton) cancelButton.style.display = 'none';
+          
+          // Clear session and show form after a delay
+          setTimeout(() => {
+              showRideForm();
+              currentRideId = null;
+          }, 3000);
           break;
   }
 }
+
 
 function updateStarRating(rating) {
     const ratingElement = document.querySelector('.driver-rating');
@@ -2924,6 +2953,28 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initialize payment functionality
   setTimeout(initializePaymentFunctionality, 1000);
 });
+
+// Add initialization function for payment
+function initializePaymentFunctionality() {
+  const payNowBtn = document.getElementById('payNowBtn');
+  if (payNowBtn && !payNowBtn.hasAttribute('data-initialized')) {
+      payNowBtn.setAttribute('data-initialized', 'true');
+      payNowBtn.addEventListener('click', function() {
+          const rideId = this.getAttribute('data-ride-id');
+          const amount = this.getAttribute('data-amount');
+          
+          console.log('[PAYMENT] Initiating payment for ride:', rideId);
+          
+          // Show processing state
+          this.style.display = 'none';
+          const processingBtn = document.getElementById('paymentProcessingBtn');
+          if (processingBtn) processingBtn.style.display = 'block';
+          
+          // Initiate payment
+          initiatePaystackPayment(rideId);
+      });
+  }
+}
   </script>
 </body>
 </html>
