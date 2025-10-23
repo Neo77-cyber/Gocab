@@ -1173,6 +1173,58 @@ window.loadCompletedRides = loadCompletedRides;
 
 console.log('Pagination functions loaded with correct URLs');
 
+// Function to update driver location
+function updateDriverLocation() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            function(position) {
+                const latitude = position.coords.latitude;
+                const longitude = position.coords.longitude;
+                
+                fetch('/api/update-driver-location/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        latitude: latitude,
+                        longitude: longitude
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Location updated successfully');
+                    // Refresh pending rides to show nearby ones
+                    updatePendingRides();
+                })
+                .catch(error => {
+                    console.error('Error updating location:', error);
+                });
+            },
+            function(error) {
+                console.error('Geolocation error:', error);
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 60000 // Update every minute
+            }
+        );
+    }
+}
+
+// Update location on page load and every 30 seconds
+document.addEventListener('DOMContentLoaded', function() {
+    updateDriverLocation();
+    setInterval(updateDriverLocation, 30000);
+});
+
+// Helper function to get CSRF token
+function getCSRFToken() {
+    return document.querySelector('[name=csrfmiddlewaretoken]').value;
+}
+
  </script>
 </body>
 </html>

@@ -376,6 +376,15 @@
   font-weight: 500;
 }
 
+.pickup-time {
+  font-size: 0.8rem;
+  color: #f59e0b;
+  background: #fef3c7;
+  padding: 2px 8px;
+  border-radius: 12px;
+  border: 1px solid #fcd34d;
+}
+
 .trip-timer i {
   color: #f59e0b;
 }
@@ -477,12 +486,21 @@
       }
     }
   </style>
-{% for ride in pending_rides %}
+  {% for ride in pending_rides %}
 <div class="trip-card" data-ride-id="{{ ride.id }}">
     <div class="trip-header">
         <div class="trip-meta">
             <span class="trip-time">{{ ride.requested_at|timesince }} ago</span>
-            <span class="trip-distance">{{ ride.distance_km|floatformat:1 }} km away</span>
+            <span class="trip-distance">
+                {% if ride.distance_from_driver %}
+                    {{ ride.distance_from_driver|floatformat:1 }} km away
+                {% else %}
+                    {{ ride.distance_km|floatformat:1 }} km trip
+                {% endif %}
+            </span>
+            {% if ride.estimated_pickup_time %}
+            <span class="pickup-time">~{{ ride.estimated_pickup_time }} min pickup</span>
+            {% endif %}
         </div>
         <div class="trip-price">₦{{ ride.total_fare|floatformat:2 }}</div>
     </div>
@@ -500,36 +518,32 @@
     </div>
     
     <div class="trip-footer">
-      <div class="passenger-info">
-        <div class="passenger-avatar">
-            {{ ride.passenger.get_full_name|first|default:ride.passenger.username|first }}
-        </div>
-        <div class="passenger-details">
-            <div class="passenger-name">
-                {{ ride.passenger.get_full_name|default:ride.passenger.username }}
+        <div class="passenger-info">
+            <div class="passenger-avatar">
+                {{ ride.passenger.get_full_name|first|default:ride.passenger.username|first }}
             </div>
-            <div class="passenger-contact">
-                <div class="passenger-phone">
-                    <i class="fas fa-phone"></i>
-                    {% if ride.passenger.rider and ride.passenger.rider.phone_number %}
-                        {{ ride.passenger.rider.phone_number }}
-                    {% else %}
-                        No phone number
-                    {% endif %}
+            <div class="passenger-details">
+                <div class="passenger-name">
+                    {{ ride.passenger.get_full_name|default:ride.passenger.username }}
                 </div>
-                <div class="passenger-rating">
-                    <i class="fas fa-star"></i>
-                    {% with rider_profile=ride.passenger.rider %}
-                        {% if rider_profile and rider_profile.rating %}
-                            {{ rider_profile.rating|floatformat:1 }}
-                        {% else %}
-                            5.0
-                        {% endif %}
-                    {% endwith %}
+                <div class="passenger-contact">
+                    <div class="passenger-phone">
+                        <i class="fas fa-phone"></i>
+                        {{ ride.passenger_phone }}
+                    </div>
+                    <div class="passenger-rating">
+                        <i class="fas fa-star"></i>
+                        {% with rider_profile=ride.passenger.rider %}
+                            {% if rider_profile and rider_profile.rating %}
+                                {{ rider_profile.rating|floatformat:1 }}
+                            {% else %}
+                                5.0
+                            {% endif %}
+                        {% endwith %}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
         <div class="trip-actions">
             <form method="post" action="{% url 'accept_ride' ride.id %}" class="accept-ride-form">
                 {% csrf_token %}
@@ -544,7 +558,16 @@
 {% empty %}
 <div class="empty-state">
     <i class="fas fa-car"></i>
-    <p>No new ride requests</p>
+    {% if has_location %}
+        <p>No rides within {{ max_distance }}km radius</p>
+        <small class="text-muted">Rides will appear here as they become available</small>
+        <div class="location-info">
+            <small><i class="fas fa-info-circle"></i> Only showing rides within {{ max_distance }}km of your location in {{ city|title }}</small>
+        </div>
+    {% else %}
+        <p>No new ride requests</p>
+        <small class="text-muted">Update your location to see nearby rides</small>
+    {% endif %}
 </div>
 {% endfor %}
 

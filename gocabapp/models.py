@@ -88,11 +88,11 @@ class RideRequest(models.Model):
     passenger = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ride_requests')
     driver = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='ride_requests_as_driver')
     current_location = models.CharField(max_length=255)
-    pickup_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    pickup_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    pickup_latitude = models.FloatField(blank=True, null=True)
+    pickup_longitude = models.FloatField(blank=True, null=True)
+    destination_latitude = models.FloatField(blank=True, null=True)
+    destination_longitude = models.FloatField(blank=True, null=True)
     destination = models.CharField(max_length=255)
-    dropoff_latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
-    dropoff_longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='pending')
     payment_reference = models.CharField(max_length=255, null=True, blank=True)
@@ -122,9 +122,13 @@ class RideRequest(models.Model):
         self.paid_at = timezone.now()
         self.save()
 
+    def set_pickup_coordinates(self, lat, lng):
+        self.pickup_latitude = lat
+        self.pickup_longitude = lng
+        self.save()
+
     @property
     def driver_earnings(self):
-        
         if self.total_fare:
             return float(self.total_fare) * 0.8
         return 0.0

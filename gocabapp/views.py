@@ -12,7 +12,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import  auth
 from django.utils import timezone
-from .services import get_google_distance, calculate_ride_fare
+from .services import *
 from django.http import JsonResponse
 import json
 from django.views.decorators.csrf import csrf_exempt
@@ -38,7 +38,7 @@ def ride_request_update(sender, instance, created, **kwargs):
     if not created:
         channel_layer = get_channel_layer()
         
-        # Send to passenger
+        
         if instance.status == 'accepted':
 
             Notification.objects.filter(user=instance.passenger, is_active=True).delete()
@@ -107,7 +107,7 @@ def ride_request_update(sender, instance, created, **kwargs):
                 }
             )
 
-        # Send to driver
+        
         if instance.driver and instance.status in ['cancelled']:
             async_to_sync(channel_layer.group_send)(
                 f"driver_updates_{instance.driver.id}",
@@ -128,7 +128,7 @@ def ride_status(request, ride_id):
             if 'current_ride_id' in request.session:
                 del request.session['current_ride_id']
         
-        # Basic timestamp handling
+        
         last_updated = ride.requested_at.isoformat()
         
         driver_info = None
@@ -139,7 +139,7 @@ def ride_status(request, ride_id):
                 'license_plate': ride.driver.driver.license_plate or 'N/A'
             }
         
-        # Minimal response without any decimal fields
+        
         response_data = {
             'status': ride.status,
             'fare': float(ride.total_fare) if ride.total_fare else 0,
@@ -190,7 +190,7 @@ def rider_dashboard(request):
         
         request.session.modified = True
     else:
-        # Check for recently completed ride (within last 10 minutes)
+        
         completed_ride = RideRequest.objects.filter(
             passenger=request.user,
             status='completed',
@@ -199,7 +199,7 @@ def rider_dashboard(request):
         
         if completed_ride and completed_ride.completed_at:
             time_since_completion = timezone.now() - completed_ride.completed_at
-            if time_since_completion.total_seconds() < 600:  # 10 minutes
+            if time_since_completion.total_seconds() < 600: 
                 request.session['current_ride_id'] = str(completed_ride.id)
                 request.session['current_ride_status'] = 'completed'
                 request.session['completed_ride_fare'] = float(completed_ride.total_fare) if completed_ride.total_fare is not None else 0.0
@@ -274,6 +274,115 @@ def rider_dashboard(request):
     debug_session(request, "Exiting rider_dashboard")
     return render(request, 'rider-dashboard.html', context)
 
+from django.db.models import Q, ExpressionWrapper, FloatField
+from django.db.models.functions import ACos, Cos, Radians, Sin
+import math
+
+# Add these imports at the top of views.py
+from django.db.models import F, ExpressionWrapper, FloatField
+from django.db.models.functions import ACos, Cos, Radians, Sin
+
+
+def estimate_pickup_time(distance_km, city):
+    """
+    Estimate pickup time based on distance and city traffic patterns
+    """
+    # Average speeds by city (km/h) - considering traffic
+    city_speeds = {
+        'lagos': 20,      # Heavy traffic
+        'benin': 30,      # Moderate traffic
+        'ibadan': 25,     # Moderate-heavy traffic
+        'abuja': 35,      # Better roads
+        'port harcourt': 25,
+        'default': 25
+    }
+    
+    avg_speed = city_speeds.get(city, 25)
+    
+    # Time = Distance / Speed (convert to minutes)
+    base_time = (distance_km / avg_speed) * 60
+    
+    # Add buffer for traffic lights, etc.
+    pickup_time = base_time + (distance_km * 1.5)  # 1.5 minutes per km buffer
+    
+    return round(pickup_time)
+
+def get_nearby_rides(driver_lat, driver_lng):
+    """
+    Get rides within appropriate distance AND reasonable pickup time
+    """
+    if not driver_lat or not driver_lng:
+        return RideRequest.objects.none()
+    
+    try:
+        # Get distance limits based on driver's city
+        distance_limits = get_city_distance_limits(driver_lat, driver_lng)
+        max_distance = distance_limits['max_pickup_distance']
+        max_pickup_time = distance_limits['max_pickup_time']
+        
+        driver_city = detect_city_from_coordinates(driver_lat, driver_lng)
+        print(f"📍 Driver in {driver_city} - max {max_distance}km pickup, max {max_pickup_time}min pickup time")
+        
+        # Get ALL pending rides first (we'll filter in Python)
+        all_pending_rides = RideRequest.objects.filter(
+            status='pending',
+            driver__isnull=True,
+            pickup_latitude__isnull=False,
+            pickup_longitude__isnull=False,
+            destination_latitude__isnull=False,
+            destination_longitude__isnull=False
+        ).select_related('passenger')
+        
+        print(f"📊 Found {all_pending_rides.count()} total pending rides")
+        
+        # Filter by distance, city, and time in Python
+        valid_rides = []
+        for ride in all_pending_rides:
+            # Calculate distance
+            distance = calculate_distance_haversine(
+                driver_lat, driver_lng,
+                ride.pickup_latitude, ride.pickup_longitude
+            )
+            
+            if not distance or distance > max_distance:
+                continue
+            
+            # City validation
+            if not should_show_ride_to_driver(
+                driver_lat, driver_lng,
+                ride.pickup_latitude, ride.pickup_longitude,
+                ride.destination_latitude, ride.destination_longitude
+            ):
+                continue
+            
+            # Estimate pickup time
+            estimated_pickup_time = estimate_pickup_time(distance, driver_city)
+            
+            if estimated_pickup_time <= max_pickup_time:
+                # Add the calculated fields to the ride object
+                ride.distance_from_driver = distance
+                ride.estimated_pickup_time = estimated_pickup_time
+                valid_rides.append(ride)
+                print(f"✅ Ride {ride.id}: {distance:.1f}km away, ~{estimated_pickup_time}min pickup")
+            else:
+                print(f"🚫 Ride {ride.id}: Too far - {distance:.1f}km, ~{estimated_pickup_time}min pickup")
+        
+        # Sort by distance (closest first)
+        valid_rides.sort(key=lambda x: x.distance_from_driver)
+        
+        print(f"📊 Found {len(valid_rides)} valid rides after filtering")
+        
+        # Return the list (we'll handle pagination in the view)
+        return valid_rides
+    
+    except Exception as e:
+        logger.error(f"Error in get_nearby_rides: {str(e)}")
+        # Fallback to basic query
+        return list(RideRequest.objects.filter(
+            status='pending',
+            driver__isnull=True
+        ).select_related('passenger').order_by('-requested_at'))
+
 @csrf_exempt
 @login_required
 def request_ride(request):
@@ -291,14 +400,14 @@ def request_ride(request):
         if not current_location or not destination:
             return JsonResponse({'error': 'Both locations required'}, status=400)
         
-        # Calculate distance and fare
-        distance_km, duration_min = get_google_distance(current_location, destination)
+        # Calculate distance, duration AND coordinates
+        distance_km, duration_min, pickup_coords, dest_coords = get_google_distance_with_coords(current_location, destination)
         if not distance_km:
             return JsonResponse({'error': 'Could not calculate route'}, status=400)
             
         fare = calculate_ride_fare(distance_km, duration_min)
         
-        # Create ride
+        # Create ride with coordinates
         ride = RideRequest.objects.create(
             passenger=request.user,
             current_location=current_location,
@@ -306,13 +415,17 @@ def request_ride(request):
             distance_km=distance_km,
             duration_min=duration_min,
             total_fare=fare['total_fare'],
-            status='pending'
+            status='pending',
+            pickup_latitude=pickup_coords['lat'] if pickup_coords else None,
+            pickup_longitude=pickup_coords['lng'] if pickup_coords else None,
+            destination_latitude=dest_coords['lat'] if dest_coords else None,
+            destination_longitude=dest_coords['lng'] if dest_coords else None,
         )
         
         request.session['current_ride_id'] = ride.id
         request.session.modified = True  
         
-        # Notify drivers
+        # Notify drivers with location data
         channel_layer = get_channel_layer()
         async_to_sync(channel_layer.group_send)(
             "available_drivers",
@@ -322,7 +435,9 @@ def request_ride(request):
                 'ride_id': ride.id,
                 'pickup': ride.current_location,
                 'destination': ride.destination,
-                'fare': ride.total_fare
+                'fare': ride.total_fare,
+                'pickup_lat': ride.pickup_latitude,
+                'pickup_lng': ride.pickup_longitude,
             }
         )
         
@@ -445,12 +560,44 @@ def driver_dashboard(request):
 @login_required
 def pending_rides(request):
     page = request.GET.get('page', 1)
-    rides_list = RideRequest.objects.filter(
-        status='pending',
-        driver__isnull=True
-    ).select_related('passenger').order_by('-requested_at')
     
-    paginator = Paginator(rides_list, 4)  
+    # Get driver's current location
+    try:
+        driver = request.user.driver
+        driver_lat = driver.latitude
+        driver_lng = driver.longitude
+        has_location = bool(driver_lat and driver_lng)
+        
+        if has_location:
+            # Detect city and get limits
+            city = detect_city_from_coordinates(driver_lat, driver_lng)
+            distance_limits = get_city_distance_limits(driver_lat, driver_lng)
+            max_distance = distance_limits['max_pickup_distance']
+            
+            print(f"🚗 Driver in {city}, showing rides within {max_distance}km")
+        else:
+            city = "unknown"
+            max_distance = 6
+            
+    except Exception as e:
+        logger.error(f"Driver location error: {str(e)}")
+        driver_lat = None
+        driver_lng = None
+        has_location = False
+        city = "unknown"
+        max_distance = 6
+    
+    # Get nearby rides
+    if has_location:
+        rides_list = get_nearby_rides(driver_lat, driver_lng)  # This returns a list now
+    else:
+        rides_list = list(RideRequest.objects.filter(
+            status='pending',
+            driver__isnull=True
+        ).select_related('passenger').order_by('-requested_at'))
+    
+    # Handle pagination for lists
+    paginator = Paginator(rides_list, 4)
     
     try:
         rides = paginator.page(page)
@@ -459,14 +606,47 @@ def pending_rides(request):
     except EmptyPage:
         rides = paginator.page(paginator.num_pages)
     
+    # Add passenger phone numbers for template (already handled in get_nearby_rides)
     for ride in rides:
-        phone_number = ride.passenger.rider.phone_number if hasattr(ride.passenger, 'rider') else "No phone number"
+        if not hasattr(ride, 'passenger_phone'):
+            ride.passenger_phone = ride.passenger.rider.phone_number if hasattr(ride.passenger, 'rider') else "No phone number"
     
     html = render_to_string('partials/_pending_rides.html', {
         'pending_rides': rides,
-        'request': request
+        'request': request,
+        'has_location': has_location,
+        'max_distance': max_distance,
+        'city': city
     })
     return JsonResponse({'html': html})
+
+@csrf_exempt
+@login_required
+def update_driver_location(request):
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Only POST allowed'}, status=405)
+    
+    try:
+        driver = request.user.driver
+        data = json.loads(request.body)
+        
+        latitude = data.get('latitude')
+        longitude = data.get('longitude')
+        address = data.get('address')
+        
+        if not latitude or not longitude:
+            return JsonResponse({'error': 'Latitude and longitude required'}, status=400)
+        
+        driver.update_location(latitude, longitude, address)
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Location updated successfully'
+        })
+        
+    except Exception as e:
+        logger.error(f"Location update error: {str(e)}")
+        return JsonResponse({'error': str(e)}, status=500)
 
 @login_required
 def accepted_rides(request):
@@ -1181,7 +1361,15 @@ def payment_success(request, ride_id):
         traceback.print_exc()
         return redirect(f'/rider-dashboard/?payment=failed&error=unexpected&message={str(e)}')
 
-
+def debug_session(request, message):
+    """Helper to debug session state"""
+    session_data = {
+        'current_ride_id': request.session.get('current_ride_id'),
+        'current_ride_status': request.session.get('current_ride_status'),
+        'completed_ride_fare': request.session.get('completed_ride_fare'),
+        'current_driver': request.session.get('current_driver'),
+    }
+    print(f"[SESSION DEBUG] {message}: {session_data}")
 
 
 
@@ -1235,6 +1423,7 @@ def driver_profile(request):
 @login_required(login_url='home')
 def driver_earnings(request):
     return render(request, 'driver-earnings.html')
+    
 
 
 @csrf_exempt  
